@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".MainActivity">
+
+<!--    Left joystick-->
+    <io.github.controlwear.virtual.joystick.android.JoystickView
+        android:id="@+id/joystickViewLeft"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:layout_marginBottom="26dp"
+        android:layout_marginStart="16dp"
+        app:JV_backgroundColor="#20000000"
+        app:JV_borderWidth="4dp"
+        app:JV_buttonColor="#ffcc00"
+        app:JV_buttonSizeRatio="35%"
+        app:JV_fixedCenter="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/joystickViewRight"
+        app:layout_constraintHorizontal_bias="0.032"
+        app:layout_constraintStart_toStartOf="parent" />
+
+<!--    Right joystick-->
+    <io.github.controlwear.virtual.joystick.android.JoystickView
+        android:id="@+id/joystickViewRight"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:layout_marginEnd="26dp"
+        android:layout_marginBottom="26dp"
+        app:JV_backgroundColor="#20000000"
+        app:JV_borderWidth="4dp"
+        app:JV_buttonColor="#ffcc00"
+        app:JV_buttonSizeRatio="35%"
+        app:JV_fixedCenter="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/connectToDrone"
+        android:layout_width="51dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="#ffcc00"
+        android:elevation="10dp"
+        android:gravity="center"
+        app:backgroundTint="#ffcc00"
+        app:fabCustomSize="50dp"
+        app:layout_constraintBottom_toTopOf="@+id/joystickViewLeft"
+        app:layout_constraintEnd_toStartOf="@+id/videocam"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/connect_drone" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/takeoff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#ffcc00"
+        android:elevation="10dp"
+        android:gravity="center"
+        app:backgroundTint="#ffcc00"
+        app:fabCustomSize="50dp"
+        app:layout_constraintBottom_toTopOf="@+id/land"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.976"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.812"
+        app:srcCompat="@drawable/flight_takeoff" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/land"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="#ffcc00"
+        android:elevation="10dp"
+        android:gravity="center"
+        app:backgroundTint="#ffcc00"
+        app:fabCustomSize="50dp"
+        app:layout_constraintBottom_toTopOf="@+id/joystickViewRight"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.976"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/flight_land" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/videocam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="#ffcc00"
+        android:elevation="10dp"
+        android:gravity="center"
+        app:backgroundTint="#ffcc00"
+        app:fabCustomSize="50dp"
+        app:layout_constraintBottom_toTopOf="@+id/joystickViewLeft"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.121"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:srcCompat="@drawable/videocam" />
+
+    <TextView
+        android:id="@+id/droneBattery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:padding="@dimen/cardview_compat_inset_shadow"
+        android:text="Battery: na"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.499"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
