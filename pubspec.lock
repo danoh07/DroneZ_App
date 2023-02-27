@@ -75,6 +75,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  handy:
+    dependency: transitive
+    description:
+      name: handy
+      sha256: "0d42c16aa21dc61864b8cdaab24a4234218bf9af22d8029953015cdbc1faf6e9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.4"
   js:
     dependency: transitive
     description:
@@ -123,6 +131,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.2"
+  ryze_tello:
+    dependency: "direct main"
+    description:
+      name: ryze_tello
+      sha256: "4f2eb8a1652d2ce6271240d267106646fc85fac8195ffc61d722760ff0b3da41"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   sky_engine:
     dependency: transitive
     description: flutter
