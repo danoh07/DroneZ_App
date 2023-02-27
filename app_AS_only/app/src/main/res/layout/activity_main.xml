@@ -126,4 +126,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
+    <TextView
+        android:id="@+id/wifiConnection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/cardview_compat_inset_shadow"
+        android:text="Connection: Disconnected"
+        android:textSize="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/droneBattery"
+        app:layout_constraintVertical_bias="0.0" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
