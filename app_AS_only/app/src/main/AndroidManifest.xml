@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-<!--    Allow connection to the app-->
+    <!-- Allow connection to the app -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -16,11 +16,33 @@
         android:theme="@style/Theme.DroneZ_beta"
         tools:targetApi="31">
         <activity
+            android:name=".ControlSelection"
+            android:exported="false"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".ManualControl"
+            android:exported="true"
             android:screenOrientation="landscape">
-<!--            Keep the app in landscape -->
+
+            <!-- Keep the app in landscape -->
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
