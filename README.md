@@ -18,7 +18,7 @@
 ## Installation 
 With the environment configured, just clone this repository. 
 You might also need to add any packages that might not be installed.
-The only package that this projected imported which is:
+The only package that this projected imported is ryze_tello, you can install it by running the following code in your terminal:
 ```
 flutter pub add ryze_tello
 ```
