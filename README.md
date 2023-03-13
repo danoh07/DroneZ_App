@@ -1,4 +1,4 @@
-# Future App for connecting the drone to the users Phone
+# DroneZ App for connecting the drone to the users Phone
 
 ## This projects aims to:
 - Create a UI for controlling future DroneZ drone 
