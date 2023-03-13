@@ -14,7 +14,7 @@
 ### Prerequisites
 * Tello Drone (Model:TLW004) (if you want to fly it)
 * Android Device to download our application (dronez beta app)
-* <a href="https://developer.android.com/studio?gclid=Cj0KCQjwk7ugBhDIARIsAGuvgPb497EJwWBBpNRe0kE56rmhBMo8bCTHDCaanpjdUWFn4spUkeVxhbYaAlK2EALw_wcB&gclsrc=aw.ds">Android Studio</a>
+* Download <a href="https://developer.android.com/studio?gclid=Cj0KCQjwk7ugBhDIARIsAGuvgPb497EJwWBBpNRe0kE56rmhBMo8bCTHDCaanpjdUWFn4spUkeVxhbYaAlK2EALw_wcB&gclsrc=aw.ds">Android Studio</a> and <a href="https://docs.flutter.dev/get-started/install?gclid=Cj0KCQjwk7ugBhDIARIsAGuvgPbPkX7_k-mLrQT-DR1b4OT5R97D4nLXvA5lwDYK30NdFq12g-XzjXQaAjclEALw_wcB&gclsrc=aw.ds">Flutter</a> according to your operating system
 
 ## Installation 
 With the environment configured, just clone this repository. 
