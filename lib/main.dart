@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:ryze_tello/ryze_tello.dart';
+import 'package:flutter/material.dart';
+import 'joy_stick.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,7 +60,12 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 100,
               width: 320,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MenuPage(pageIndex: 0)));
+                },
                 icon: Icon(
                   Icons.bookmark,
                   size: 50,
@@ -75,8 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
               width: 320,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => MenuPage()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MenuPage(pageIndex: 1)));
                 },
                 icon: Icon(
                   Icons.rocket,
@@ -96,7 +105,12 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 100,
               width: 320,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MenuPage(pageIndex: 2)));
+                },
                 icon: Icon(
                   Icons.question_mark,
                   size: 50,
@@ -115,15 +129,26 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MenuPage extends StatefulWidget {
+  final int pageIndex;
+
+  const MenuPage({Key? key, required this.pageIndex}) : super(key: key);
+
   @override
   State<MenuPage> createState() => _MenuPage();
 }
 
 class _MenuPage extends State<MenuPage> {
-  var selectedIndex = 1;
+  var selectedIndex = 0;
+  var firstTime = true;
 
   @override
   Widget build(BuildContext context) {
+    // initial page
+    if (firstTime) {
+      selectedIndex = widget.pageIndex;
+      firstTime = false;
+    }
+
     Widget page;
 
     switch (selectedIndex) {
@@ -146,7 +171,12 @@ class _MenuPage extends State<MenuPage> {
     );
 
     return Scaffold(
-      body: mainArea,
+      body: Stack(children: <Widget>[
+        BackButton(onPressed: () {
+          Navigator.pop(context);
+        }),
+        mainArea,
+      ]),
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -244,6 +274,10 @@ class FlightControlOptionCard extends StatelessWidget {
                 child: ElevatedButton(
                     onPressed: () {
                       print('Manual');
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ManualControlPage()));
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
@@ -262,6 +296,85 @@ class FlightControlOptionCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class BackButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  const BackButton({Key? key, required this.onPressed}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.topLeft,
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: Colors.black,
+          onPressed: onPressed,
+          splashColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          iconSize: 30,
+        ),
+      ),
+    );
+  }
+}
+
+class ManualControlPage extends StatefulWidget {
+  ManualControlPage({super.key});
+
+  @override
+  State<ManualControlPage> createState() => _ManualControlPageState();
+}
+
+class _ManualControlPageState extends State<ManualControlPage> {
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    //Make function to control drone
+    void callback(x, y) {}
+
+    return Scaffold(
+      body: Stack(children: <Widget>[
+        BackButton(onPressed: () {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeRight,
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown,
+          ]);
+          Navigator.pop(context);
+        }),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Row(
+              children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.only(left: 45),
+                    child: JoyStick(
+                        radius: 70, stickRadius: 15, callback: callback)),
+                Spacer(),
+                Padding(
+                    padding: EdgeInsets.only(right: 45),
+                    child: JoyStick(
+                        radius: 70, stickRadius: 15, callback: callback)),
+              ],
+            ),
+            SizedBox(height: 30)
+          ],
+        ),
+      ]),
     );
   }
 }
