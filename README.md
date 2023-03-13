@@ -12,8 +12,9 @@
 - For now, Tello Drone is only thing that works with the app 
 
 ### Prerequisites
-* Tello Drone (if you want to fly it)
-* Android Device
+* Tello Drone (Model:TLW004) (if you want to fly it)
+* Android Device to download our application (dronez beta app)
+* <a href="https://developer.android.com/studio?gclid=Cj0KCQjwk7ugBhDIARIsAGuvgPb497EJwWBBpNRe0kE56rmhBMo8bCTHDCaanpjdUWFn4spUkeVxhbYaAlK2EALw_wcB&gclsrc=aw.ds">Android Studio</a>
 
 ## Installation 
 With the environment configured, just clone this repository. 
