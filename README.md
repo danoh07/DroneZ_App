@@ -1,16 +1,31 @@
-# dronez
+# Future App for connecting the drone to the users Phone
 
-A new Flutter project.
+## This projects aims to:
+- Create a UI for controlling future DroneZ drone 
+- Handles drone using virtual controls
+- Set Path for drones to go in given map environment 
+- Stream video from the drone to the phone 
+- Support multiplatform: IOS and Andriod support 
 
 ## Getting Started
+- To deploy the application on your machine, you will need to install Dart, Flutter, and Android Studio 
+- For now, Tello Drone is only thing that works with the app 
 
-This project is a starting point for a Flutter application.
+### Prerequisites
+* Tello Drone (if you want to fly it)
+* Android Device
 
-A few resources to get you started if this is your first Flutter project:
+## Installation 
+With the environment configured, just clone this repository. 
+You might also need to add any packages that might not be installed.
+The only package that this projected imported which is:
+```
+flutter pub add ryze_tello
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Notice
+The flutter app written in Dart, only has the wireframe for UI for future Drone Z. We are working on converting the code we have in Android Studio into Dart for future multiplatform support
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### If you want to use the working controller
+Open android studio > open app_AS_only > Build > run app (preferably connecting your phone)
+
