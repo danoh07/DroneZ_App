@@ -33,6 +33,8 @@ plugins {
 
   ...
 }
+
+
 android {
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
