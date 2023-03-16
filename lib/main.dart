@@ -340,6 +340,10 @@ class _ManualControlPageState extends State<ManualControlPage> {
     ]);
   }
 
+  late final Tello tello;
+
+  bool _connected = false;
+
   @override
   Widget build(BuildContext context) {
     //Make function to control drone
@@ -353,11 +357,87 @@ class _ManualControlPageState extends State<ManualControlPage> {
             DeviceOrientation.portraitUp,
             DeviceOrientation.portraitDown,
           ]);
+          if (_connected) {
+            tello.disconnect();
+          }
+
           Navigator.pop(context);
         }),
         Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
+            Align(
+                alignment: Alignment.center,
+                child: Text('Tello drone connection: $_connected')),
+            SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(50, 50),
+                      shape: const CircleBorder(),
+                    ),
+                    onPressed: () async {
+                      try {
+                        tello = await Tello.tello();
+                        setState(() {
+                          _connected = true;
+                        });
+                      } catch (error, stack) {
+                        print("Error: $error");
+                        print("Error: $stack");
+                      }
+                    },
+                    child: Text(
+                      "Connect",
+                      style: TextStyle(fontSize: 8.5),
+                    )),
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(50, 50),
+                      shape: const CircleBorder(),
+                    ),
+                    onPressed: () async {
+                      if (_connected) {
+                        try {
+                          await tello.takeoff();
+                          print('Successful');
+                        } catch (error, stack) {
+                          print(error);
+                          print("Error: $stack");
+                        }
+                      } else {
+                        print('Tello Not Connected');
+                      }
+                    },
+                    child: Text(
+                      "Take Off",
+                      style: TextStyle(fontSize: 8.5),
+                    )),
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      fixedSize: const Size(50, 50),
+                      shape: const CircleBorder(),
+                    ),
+                    onPressed: () async {
+                      if (_connected) {
+                        try {
+                          await tello.land();
+                          print('Successful');
+                        } catch (error) {
+                          print(error);
+                        }
+                      } else {
+                        print('Tello Not Connected');
+                      }
+                    },
+                    child: Text(
+                      "Land",
+                      style: TextStyle(fontSize: 8.5),
+                    )),
+              ],
+            ),
             Row(
               children: <Widget>[
                 Padding(
@@ -365,8 +445,14 @@ class _ManualControlPageState extends State<ManualControlPage> {
                     child: Joystick(
                       mode: JoystickMode.horizontalAndVertical,
                       listener: (details) {
-                        print(
-                            '${(details.x * 100).toInt()}, ${-(details.y * 100).toInt()}');
+                        var x = (details.x * 100).toInt();
+                        var y = -(details.y * 100).toInt();
+
+                        print('$x, $y');
+
+                        if (_connected) {
+                          tello.remoteControl(yaw: x, vertical: y);
+                        }
                       },
                     )),
                 Spacer(),
@@ -375,8 +461,14 @@ class _ManualControlPageState extends State<ManualControlPage> {
                     child: Joystick(
                       mode: JoystickMode.all,
                       listener: (details) {
-                        print(
-                            '${(details.x * 100).toInt()}, ${-(details.y * 100).toInt()}');
+                        var x = (details.x * 100).toInt();
+                        var y = -(details.y * 100).toInt();
+
+                        print('$x, $y');
+
+                        if (_connected) {
+                          tello.remoteControl(roll: x, pitch: y);
+                        }
                       },
                     )),
               ],
@@ -387,8 +479,4 @@ class _ManualControlPageState extends State<ManualControlPage> {
       ]),
     );
   }
-}
-
-Future<Tello> connectTello() async {
-  return await Tello.tello();
 }
