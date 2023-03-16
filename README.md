@@ -23,7 +23,9 @@ The only package that this projected imported is ryze_tello, you can install it 
 ```
 flutter pub add ryze_tello
 ```
-
+```
+flutter pub add ryze_tello
+```
 ### Notice
 The flutter app written in Dart, only has the wireframe for UI for future Drone Z. We are working on converting the code we have in Android Studio into Dart for future multiplatform support
 
