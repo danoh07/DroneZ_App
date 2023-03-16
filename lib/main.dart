@@ -1,7 +1,7 @@
 import 'package:ryze_tello/ryze_tello.dart';
 import 'package:flutter/material.dart';
-import 'joy_stick.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_joystick/flutter_joystick.dart';
 
 void main() {
   runApp(const MyApp());
@@ -333,6 +333,7 @@ class _ManualControlPageState extends State<ManualControlPage> {
   @override
   void initState() {
     super.initState();
+
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
@@ -342,7 +343,6 @@ class _ManualControlPageState extends State<ManualControlPage> {
   @override
   Widget build(BuildContext context) {
     //Make function to control drone
-    void callback(x, y) {}
 
     return Scaffold(
       body: Stack(children: <Widget>[
@@ -362,13 +362,23 @@ class _ManualControlPageState extends State<ManualControlPage> {
               children: <Widget>[
                 Padding(
                     padding: EdgeInsets.only(left: 45),
-                    child: JoyStick(
-                        radius: 70, stickRadius: 15, callback: callback)),
+                    child: Joystick(
+                      mode: JoystickMode.horizontalAndVertical,
+                      listener: (details) {
+                        print(
+                            '${(details.x * 100).toInt()}, ${-(details.y * 100).toInt()}');
+                      },
+                    )),
                 Spacer(),
                 Padding(
                     padding: EdgeInsets.only(right: 45),
-                    child: JoyStick(
-                        radius: 70, stickRadius: 15, callback: callback)),
+                    child: Joystick(
+                      mode: JoystickMode.all,
+                      listener: (details) {
+                        print(
+                            '${(details.x * 100).toInt()}, ${-(details.y * 100).toInt()}');
+                      },
+                    )),
               ],
             ),
             SizedBox(height: 30)
@@ -377,4 +387,8 @@ class _ManualControlPageState extends State<ManualControlPage> {
       ]),
     );
   }
+}
+
+Future<Tello> connectTello() async {
+  return await Tello.tello();
 }
