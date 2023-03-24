@@ -242,13 +242,14 @@
         android:layout_marginTop="20dp"
         android:padding="@dimen/cardview_compat_inset_shadow"
         android:text="Battery: na"
+        android:textColor="@color/black"
         android:textSize="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
+        app:layout_constraintHorizontal_bias="0.499"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.245" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/wifiConnection"
@@ -256,13 +257,14 @@
         android:layout_height="wrap_content"
         android:padding="@dimen/cardview_compat_inset_shadow"
         android:text="Connection: Disconnected"
+        android:textColor="@color/black"
         android:textSize="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.499"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/droneBattery"
-        app:layout_constraintVertical_bias="0.029" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/Up"

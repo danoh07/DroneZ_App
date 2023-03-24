@@ -36,6 +36,7 @@ public class ControlSelection extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(ControlSelection.this, "Automatic Control clicked", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(ControlSelection.this, AutomaticControl.class));
             }
         });
 

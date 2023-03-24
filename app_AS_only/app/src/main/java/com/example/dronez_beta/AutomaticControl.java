@@ -15,7 +15,6 @@ import android.media.Image;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,9 +22,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -39,52 +39,49 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.bytedeco.ffmpeg.global.avcodec;
-import org.bytedeco.ffmpeg.global.avutil;
-import org.bytedeco.javacv.FFmpegFrameRecorder;
-
-import io.github.controlwear.virtual.joystick.android.JoystickView;
-
-public class ManualControl extends AppCompatActivity {
+public class AutomaticControl extends AppCompatActivity {
 
     private static final int[] RC = {0, 0, 0, 0};  // Integer array to store the strength from the joystick
     Pattern statePattern = Pattern.compile("-*\\d{0,3}\\.?\\d{0,2}[^\\D\\W\\s]");  // a regex pattern to read the tello state
 
-    private ImageView FeedingView;
-    private TextView droneBattery;
-    private TextView wifiConnection;
-    private ImageView connectToDrone;
-    private ImageView takeoff;
-    private ImageView land;
-    JoystickView leftjoystick;
-    JoystickView rightjoystick;
     private Handler telloStateHandler;  // and handler needs to be created to display the tello state values in the UI in realtime
     private boolean connectionFlag = false; // to check and maintain the connection status of the drone. Initially the drone is not conected, so the status is false
     private int connectionClickCounter = 1; // for counting the number of times the button is clicked
-    private Switch videoFeeding;
     private boolean videoStreamFlag = false;   // Tracking the video feeding status
     long startMs;                       // variable to calculate the time difference for video codec
     private MediaCodec m_codec;         // MediaCodec is used to decode the incoming H.264 stream from tello drone
-    private ImageView videocam;
-    private Uri videopath;
-    private int videoRecordCounter = 1;
+
+    private ImageView connectToDrone;
+    private Button submit;
+    private EditText testCommand;
+    private ImageView FeedingVideoAuto;
+    private Switch videoFeedAuto;
+    private Button autoButton;
+    private int commandIndex = 0;
+    // This is the all the command lines we want to put in Async function calls of telloConnect() function. ----------------------------------------------------------------------
+    // The telloConnect function is the function that sends the command signal to the drone.
+    private String[] commands = {"takeoff", "up 300", "cw 90", "forward 300", "ccw 90",
+            "go 500 0 100 100", "ccw 90", "forward 500", "ccw 90", "go 500 0 -100 100", "ccw 90",
+            " forward 200", "land"};
+    private Boolean autoButtonClicked = false;
+
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE); // remove title bar from android screen
-        // Removes the action bar
         getSupportActionBar().hide();
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_manual_control);
+        setContentView(R.layout.activity_automatic_control);
 
         // Sets the  background color white
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -94,163 +91,107 @@ public class ManualControl extends AppCompatActivity {
             getWindow().setStatusBarColor(Color.parseColor("#000000"));
         }
 
-        videocam = findViewById(R.id.videocam);
-        videocam.setOnClickListener(view ->{
-            if (connectionFlag) {
-                if (videoStreamFlag) {
-                    FFmpegFrameRecorder recorder = new FFmpegFrameRecorder("/sdcard/test.mp4",256,256);
-                    if (videoRecordCounter % 2 == 1) {
-                        // Recording started
-                        telloConnect("startRecording");
-                        Toast.makeText(this, "recording started", Toast.LENGTH_SHORT).show();
 
-                        try {
-                            recorder.setVideoCodec(avcodec.AV_CODEC_ID_MPEG4);
-                            recorder.setFormat("mp4");
-                            recorder.setFrameRate(30);
-//                            recorder.setPixelFormat(avutil.PIX_FMT_YUV420P10);
-                            recorder.setVideoBitrate(1200);
-                            recorder.startUnsafe();
-                            for (int i = 0; i < 5; i++) {
-                                view.setDrawingCacheEnabled(true);
-//                                Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
-                                view.setDrawingCacheEnabled(false);
-//                                recorder.record(bitmap);
-                            }
-                        }
-                        catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    if (videoRecordCounter % 2 == 0) {
-                        telloConnect("stopRecording");
-                        Toast.makeText(this, "recording ended", Toast.LENGTH_SHORT).show();
-
-//                        recorder.stop();
-                    }
-                    videoRecordCounter++;
-                }
-                else{
-                    Toast.makeText(this, "video stream is not on", Toast.LENGTH_SHORT).show();
-                }
+        // Go button that will start the auto-pilot flight of the drone
+        autoButton = findViewById(R.id.autoButton);
+        autoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                autoButtonClicked = true;
             }
+            //This is where the auto commands will be put for auto control ---------------------------------------------------------------------------------------------
+
         });
 
-        FeedingView = findViewById(R.id.bitView);
+        // Testing codes that I have been trying but does not work ------------------------------------------------------------------------------------------------------
+//        autoButton.setOnClickListener(v -> {
+//
+//                if (connectionFlag) {
+//                    telloConnect(commands[commandIndex]);
+//                    commandIndex++;
+//                    if (commandIndex >= commands.length) {
+//                        commandIndex = 0;
+//                        connectionFlag = false;
+//                    }
+//                    autoButton.setOnClickListener(v);
+//                }
 
-        videoFeeding = findViewById(R.id.videoFeed);
-        videoFeeding.setOnClickListener(view -> {
+//                if (connectionFlag) {
+//
+//                    telloConnect("command");
+//                    new Thread(new Runnable() { // create a new runnable thread to handle flight
+//                        public void run() {
+//
+//                            while (commands.length < 13) {
+//                                sleep(2000);
+//                                telloConnect(commands[commandIndex]);
+//                                commandIndex++;
+//                            }
+//                        }
+//                    }).start();
+//                }
+//        });
+
+        // Feeding the view and display on the screen
+        FeedingVideoAuto = findViewById(R.id.FeedingViewAuto);
+
+        videoFeedAuto = findViewById(R.id.videoFeedAuto);
+        videoFeedAuto.setOnClickListener(view -> {
             if (connectionFlag) {
-                if (videoFeeding.isChecked()) {
+                if (videoFeedAuto.isChecked()) {
                     videoStreamFlag = true;
                     try {
                         BlockingQueue<Bitmap> frameV = new LinkedBlockingQueue<>(2);
                         videoHandler("streamon", frameV);
-                        Runnable DLV = new displayBitmap(frameV);
+                        Runnable DLV = new AutomaticControl.displayBitmap(frameV);
                         new Thread(DLV).start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-                if (!videoFeeding.isChecked()) {
+                if (!videoFeedAuto.isChecked()) {
                     telloConnect("streamoff");
                     videoStreamFlag = false;
                 }
             } else {
-                Toast.makeText(ManualControl.this, "Drone disconnected", Toast.LENGTH_SHORT);
-                videoFeeding.setChecked(false);
+                Toast.makeText(AutomaticControl.this, "Drone disconnected", Toast.LENGTH_SHORT);
+                videoFeedAuto.setChecked(false);
             }
         });
 
+        // Button to connect to drone
         telloStateHandler = new Handler();
 
-        droneBattery = findViewById(R.id.droneBattery);
-
-        // Click wifi button to connect with drone. If connected the connection status will display connected/disconnected
-        wifiConnection = findViewById(R.id.wifiConnection);
-        connectToDrone = findViewById(R.id.connectToDrone);   // A button to initiate establishing SDK mode with the drone by sending "command" command
+        connectToDrone = findViewById(R.id.connectToDroneAuto);
         connectToDrone.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
                 if (connectionClickCounter % 2 == 1) {   // to enable switch like behavior to connect and disconnect from the drone
                     telloConnect("command");
-                    Toast.makeText(ManualControl.this, "Drone connected", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AutomaticControl.this, "Drone connected", Toast.LENGTH_SHORT).show();
                     connectionFlag = true;              // set the connection status to true
                 }
                 if (connectionClickCounter % 2 == 0) {
                     telloConnect("disconnect");
                     connectionFlag = false;
-                    Toast.makeText(ManualControl.this, "Drone disconnected", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AutomaticControl.this, "Drone disconnected", Toast.LENGTH_SHORT).show();
                 }
                 connectionClickCounter++;
-//                if (connectionFlag){
-//                    wifiConnection.setText("Connected");
-//                }
-//                else if (!connectionFlag){
-//                    wifiConnection.setText("Disconnected");
-//                }
             }
         });
 
-        // Click takeoff button to send "takeoff" command to drone
-        takeoff = findViewById(R.id.takeoff);
-        takeoff.setOnClickListener(v -> {
-            if (connectionFlag) {
-                telloConnect("takeoff");
+        // Testing the path of the drone by manual input on the screen --------------------------------This one you don't need to worry about--------------------------------------------------
+        testCommand = findViewById(R.id.testCommand);
+        submit = findViewById(R.id.submit);
+        submit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String command = testCommand.getText().toString();
+                telloConnect(command);
+                testCommand.setText("");
             }
         });
 
-        // Click land button to send "land" command to drone
-        land = findViewById(R.id.land);
-        land.setOnClickListener(v -> {
-            if (connectionFlag) {
-                telloConnect("land");
-            }
-        });
-
-
-        leftjoystick = findViewById(R.id.joystickViewLeft); // left joystick where the angle is the movement angle and strength is the extend to which you push the joystick
-        leftjoystick.setOnMoveListener((angle, strength) -> {
-
-            if (angle >45 && angle <=135){
-                RC[2]= strength;
-            }
-            if (angle >226 && angle <=315){
-                strength *= -1;
-                RC[2]= strength;
-            }
-            if (angle >135 && angle <=225){
-                strength *= -1;
-                RC[3]= strength;
-            }
-            if (angle >316 && angle <=359 || angle >0 && angle <=45){
-                RC[3]= strength;
-            }
-
-            telloConnect("rc "+ RC[0] +" "+ RC[1] +" "+ RC[2] +" "+ RC[3]); // send the command eg,. 'rc 10 00 32 00'
-            Arrays.fill(RC, 0); // reset the array with 0 after every virtual joystick move
-
-        });
-
-        rightjoystick = findViewById(R.id.joystickViewRight);
-        rightjoystick.setOnMoveListener((angle, strength) -> {
-            if (angle >45 && angle <=135){
-                RC[1]= strength;
-            }
-            if (angle >226 && angle <=315){
-                strength *= -1;
-                RC[1]= strength;
-            }
-            if (angle >135 && angle <=225){
-                strength *= -1;
-                RC[0]= strength;
-            }
-            if (angle >316 && angle <=359 || angle >0 && angle <=45){
-                RC[0]= strength;
-            }
-
-            telloConnect("rc "+ RC[0] +" "+ RC[1] +" "+ RC[2] +" "+ RC[3]);
-            Arrays.fill(RC, 0); // reset the array with 0 after every virtual joystick move
-        });
     }
 
     // Connects with tello drone
@@ -272,7 +213,7 @@ public class ManualControl extends AppCompatActivity {
                         byte[] message = new byte[1518];        // create a new byte message (you can change the size)
                         DatagramPacket rpacket = new DatagramPacket(message, message.length);
                         Log.i("UDP client: ", "about to wait to receive");
-                        udpSocket.setSoTimeout(2000);           // set a timeout to close the connection
+                        udpSocket.setSoTimeout(30000);           // set a timeout to close the connection -----------Initially was 2000 which is too short to wait for the next suto command. I extended it to 30000------------------------------------------------------------------------------------------------------
                         udpSocket.receive(rpacket);             // receive the response packet from tello
                         String text = new String(message, 0, rpacket.getLength()); // convert the message to text
                         Log.d("Received text", text);       // display the text as log in Logcat
@@ -280,9 +221,12 @@ public class ManualControl extends AppCompatActivity {
                             @Override
                             public void run() {
                                 while (!interrupted()) {
-                                    sleep(2000);            // I chose 2 seconds as the delay
+                                    sleep(2000);            // I chose 2000 as the delay ------------------This is where delay of the command receiving on drone side is occurring. We can't put it too short as we need to give a drone time for actual flight------------------------------------------------------------------------------------------------
                                     byte[] buf = new byte[0];
                                     try {
+                                        if (autoButtonClicked == true){
+
+                                        }
                                         buf = ("battery?").getBytes("UTF-8");
                                         DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddr, 8889);
                                         udpSocket.send(packet);
@@ -307,7 +251,7 @@ public class ManualControl extends AppCompatActivity {
                                             @Override
                                             public void run() {
                                                 try {
-                                                    droneBattery.setText("Battery: " + dec.get(10) + "%");
+//                                                    droneBattery.setText("Battery: " + dec.get(10) + "%");
 //                                                        if (Integer.parseInt(dec.get(10)) <= 15){
 //                                                            jdroneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
 //                                                        }
@@ -316,9 +260,9 @@ public class ManualControl extends AppCompatActivity {
 //                                                        }
                                                     if (Integer.parseInt(dec.get(10)) != 0) {
 //                                                            wifiConnection.setBackgroundResource(R.drawable.connect_drone);     // if wifi is connected and is active then display with green background
-                                                        wifiConnection.setText("Connection: connected");
+//                                                        wifiConnection.setText("Connection: connected");
                                                     } else {
-                                                        wifiConnection.setText("Connection: disconnected");
+//                                                        wifiConnection.setText("Connection: disconnected");
                                                     }
 
                                                     telloStateHandler.removeCallbacks(this);
@@ -351,7 +295,6 @@ public class ManualControl extends AppCompatActivity {
         }).start();
     }
 
-    // --------------------------This is where the video handler is to start collecting YUVV Frames from drone in the queue and trying to convert it to Bitmap Frames-----------------------------------------------
     // retrieve the video from tello drone and decode it to display on the UI
     public void videoHandler(final String strCommand, final BlockingQueue frameV) throws IOException { // add this for surfaceView : , Surface surface
         telloConnect(strCommand);
@@ -374,7 +317,7 @@ public class ManualControl extends AppCompatActivity {
                     format.setInteger(MediaFormat.KEY_WIDTH, 960);
                     format.setInteger(MediaFormat.KEY_HEIGHT, 720);
                     format.setInteger(MediaFormat.KEY_CAPTURE_RATE,30);         // 30 fps
-                    format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible); // the output is a YUV420 format which need to be converted later -----------The initial format of the Frame (YUV), which we need to collect for recording-------------------
+                    format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible); // the output is a YUV420 format which need to be converted later
                     format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 960 * 720);
 
                     try {
@@ -435,25 +378,22 @@ public class ManualControl extends AppCompatActivity {
 //                                    }
 //
 //                                    else if (detectionFlag){
+                                    try {
+                                        Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format
+                                        Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format
                                         try {
-                                            // ------------------------------------------------Basically, before converting the YUV to Image format below, we need to store the data if recording started ------------------------------------------------------
-                                            Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format ---------------------------Storing the YUV decoded frame into Image format-----------------------------
-
-                                            //-------------------------------------------------Or we can try to convert Image Frame back to YUV before the below line starts, which I feel is redundant though if we can store it before----------------------------
-                                            Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format -----------------------------------------------Converting from Image to Bitmap format
-                                            try {
-                                                if (!queue.isEmpty()){
-                                                    queue.clear();
-                                                }
-                                                queue.put(BM);                                 // pass the data to the queue created earlier
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
+                                            if (!queue.isEmpty()){
+                                                queue.clear();
                                             }
-                                        } catch (Exception e) {
+                                            queue.put(BM);                                 // pass the data to the queue created earlier
+                                        } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
-                                        m_codec.releaseOutputBuffer(outputIndex, false); // true if the surface is available
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
                                     }
+                                    m_codec.releaseOutputBuffer(outputIndex, false); // true if the surface is available
+                                }
 //                                }
                             }
                         }
@@ -474,7 +414,7 @@ public class ManualControl extends AppCompatActivity {
 
     }
 
-    // --------------------------------------------------------------------------------Helper function to conver the Image Frame to Bitmap Frame that is done above----------------------------------------------------------------------------------------
+
     private Bitmap imgToBM(Image image){        // convert from Image to Bitmap format for neural network processing.
         Image.Plane[] p = image.getPlanes();
         ByteBuffer y = p[0].getBuffer();
@@ -497,7 +437,6 @@ public class ManualControl extends AppCompatActivity {
         return BitmapFactory.decodeByteArray(imgBytes, 0 , imgBytes.length);
     }
 
-    // ----------------------------------------------------------------------By popping the stored Bipmap Frame queue, display it on the screen----------------------------------------------------------------------------------------------------
     public class displayBitmap implements Runnable{
 
         protected BlockingQueue displayQueue;       // create a blocking queue to get the data from queue
@@ -516,8 +455,8 @@ public class ManualControl extends AppCompatActivity {
                     displayQueue.clear();                                   // clear the queue after taking
                     if (displayQueue != null){
                         runOnUiThread(() -> {                               // needs to be on UI thread
-                            FeedingView.setImageBitmap(displayBitmap_);     // set the bitmap to current frame in the queue
-                            FeedingView.invalidate();
+                            FeedingVideoAuto.setImageBitmap(displayBitmap_);     // set the bitmap to current frame in the queue
+                            FeedingVideoAuto.invalidate();
                         });
                     }
                 } catch (InterruptedException e) {
@@ -527,4 +466,3 @@ public class ManualControl extends AppCompatActivity {
         }
     }
 }
-
