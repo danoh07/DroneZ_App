@@ -45,6 +45,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.concurrent.*;
 
 public class AutomaticControl extends AppCompatActivity {
 
@@ -70,7 +71,7 @@ public class AutomaticControl extends AppCompatActivity {
     private String[] commands = {"takeoff", "up 300", "cw 90", "forward 300", "ccw 90",
             "go 500 0 100 100", "ccw 90", "forward 500", "ccw 90", "go 500 0 -100 100", "ccw 90",
             " forward 200", "land"};
-    private Boolean autoButtonClicked = false;
+    private Boolean autoControlFlag = false;
 
 
 
@@ -93,14 +94,35 @@ public class AutomaticControl extends AppCompatActivity {
 
 
         // Go button that will start the auto-pilot flight of the drone
+        CountDownLatch latch = new CountDownLatch(1);
         autoButton = findViewById(R.id.autoButton);
-        autoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                autoButtonClicked = true;
-            }
-            //This is where the auto commands will be put for auto control ---------------------------------------------------------------------------------------------
+        autoButton.setOnClickListener(v -> {
+            //This is where the auto commands will be put for auto control --------------------------------------------------------------------------------------------
+            if (connectionFlag){
+                autoControlFlag = true;
+                telloConnect("takeoff");
+                sleep(9000);
+                telloConnect("go 200 0 100 100");
+                sleep(9000);
+                telloConnect("cw 90");
+                sleep(9000);
+                telloConnect("forward 200");
+                sleep(9000);
+                telloConnect("cw 90");
+                sleep(9000);
+                telloConnect("forward 200");
+                sleep(9000);
+                telloConnect("cw 90");
+                sleep(9000);
+                telloConnect("forward 200");
+                sleep(9000);
+                telloConnect("cw 90");
+                sleep(9000);
+                telloConnect("land");
 
+                autoControlFlag = false;
+                // While autoControlFlag is true, need to disable all the other buttons
+            }
         });
 
         // Testing codes that I have been trying but does not work ------------------------------------------------------------------------------------------------------
@@ -221,12 +243,12 @@ public class AutomaticControl extends AppCompatActivity {
                             @Override
                             public void run() {
                                 while (!interrupted()) {
-                                    sleep(2000);            // I chose 2000 as the delay ------------------This is where delay of the command receiving on drone side is occurring. We can't put it too short as we need to give a drone time for actual flight------------------------------------------------------------------------------------------------
+                                    sleep(100);            // I chose 2000 as the delay ------------------This is where delay of the command receiving on drone side is occurring. We can't put it too short as we need to give a drone time for actual flight------------------------------------------------------------------------------------------------
                                     byte[] buf = new byte[0];
                                     try {
-                                        if (autoButtonClicked == true){
-
-                                        }
+//                                        if (autoButtonClicked == true){
+//
+//                                        }
                                         buf = ("battery?").getBytes("UTF-8");
                                         DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddr, 8889);
                                         udpSocket.send(packet);

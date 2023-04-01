@@ -94,6 +94,7 @@ public class ManualControl extends AppCompatActivity {
     private ImageView videocam;
     private Uri videopath;
     private int videoRecordCounter = 1;
+    private boolean recordingFlag = false;
 
     // Detection
     private boolean detectionFlag;      // Tracking if the user wants to do object detection
@@ -143,6 +144,23 @@ public class ManualControl extends AppCompatActivity {
         // ===========================================================================================================================================================================================================
         // Saving the video feed into album
         videocam = findViewById(R.id.videocam);
+        videocam.setOnClickListener(view ->{
+            if (connectionFlag) {
+                if (videoRecordCounter % 2 == 1) {
+                    if (videoStreamFlag){
+                        recordingFlag = true;
+                    }
+                    if (!videoStreamFlag){
+                        recordingFlag = false;
+                        Toast.makeText(this, "Video Stream not on", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                if (videoRecordCounter % 2 == 0){
+                    recordingFlag = false;
+                }
+                videoRecordCounter++;
+            }
+        });
 //        videocam.setOnClickListener(view ->{
 //            if (connectionFlag) {
 //                if (videoStreamFlag) {
@@ -418,6 +436,7 @@ public class ManualControl extends AppCompatActivity {
         telloConnect(strCommand);
 
         BlockingQueue queue = frameV; // create a BlockingQueue since this function creates a thread and outputs a video frame which has to be displayed on the UI thread
+        BlockingQueue recording_queue = frameV;
         if (strCommand == "streamon"){
             new Thread(new Runnable() {
                 Boolean streamon = true;    // keeps track if the video stream is on or off
