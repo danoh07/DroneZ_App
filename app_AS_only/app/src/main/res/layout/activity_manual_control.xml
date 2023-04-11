@@ -153,7 +153,6 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="86dp"
         android:rotation="90"
-
         android:text="Right"
         android:textColor="@color/black"
         android:textSize="10dp" />
@@ -237,7 +236,7 @@
         app:fabCustomSize="50dp"
         app:srcCompat="@drawable/flight_land" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <ToggleButton
         android:id="@+id/videocam"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

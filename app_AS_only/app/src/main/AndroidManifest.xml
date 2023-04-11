@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 <!--    Allow to store video in memory-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
         android:allowBackup="true"
@@ -18,7 +19,8 @@
         tools:targetApi="31">
         <activity
             android:name=".AutomaticControl"
-            android:exported="false">
+            android:exported="false"
+            android:screenOrientation="landscape">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

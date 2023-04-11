@@ -3,12 +3,16 @@ package com.example.dronez_beta;
 import static android.os.SystemClock.sleep;
 import static java.lang.Thread.interrupted;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.media.Image;
@@ -28,8 +32,22 @@ import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import org.pytorch.IValue;
+import org.pytorch.LiteModuleLoader;
+import org.pytorch.Module;
+import org.pytorch.Tensor;
+import org.pytorch.torchvision.TensorImageUtils;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -45,7 +63,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.concurrent.*;
 
 public class AutomaticControl extends AppCompatActivity {
 
@@ -68,13 +85,36 @@ public class AutomaticControl extends AppCompatActivity {
     private int commandIndex = 0;
     // This is the all the command lines we want to put in Async function calls of telloConnect() function. ----------------------------------------------------------------------
     // The telloConnect function is the function that sends the command signal to the drone.
-    private String[] commands = {"takeoff", "up 300", "cw 90", "forward 300", "ccw 90",
-            "go 500 0 100 100", "ccw 90", "forward 500", "ccw 90", "go 500 0 -100 100", "ccw 90",
-            " forward 200", "land"};
+//    private String[] commands = {"takeoff", "up 300", "cw 90", "forward 300", "ccw 90",
+//            "go 500 0 100 100", "ccw 90", "forward 500", "ccw 90", "go 500 0 -100 100", "ccw 90",
+//            " forward 200", "land"};
     private Boolean autoControlFlag = false;
 
+    // Detection
+    private boolean detectionFlag;      // Tracking if the user wants to do object detection
+    private FloatingActionButton DroneObjectDetection;
+    private Module jMod = null;
+    private DetectionResult jResults;
+    private float rtThreshold = 0.30f;
 
+    public static String assetFilePath(Context context, String assetName) throws IOException {
+        File file = new File(context.getFilesDir(), assetName);
+        if (file.exists() && file.length() > 0) {
+            return file.getAbsolutePath();
+        }
 
+        try (InputStream is = context.getAssets().open(assetName)) {
+            try (OutputStream os = new FileOutputStream(file)) {
+                byte[] buffer = new byte[4 * 1024];
+                int read;
+                while ((read = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
+                }
+                os.flush();
+            }
+            return file.getAbsolutePath();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,79 +134,55 @@ public class AutomaticControl extends AppCompatActivity {
 
 
         // Go button that will start the auto-pilot flight of the drone
-        CountDownLatch latch = new CountDownLatch(1);
+//        CountDownLatch latch = new CountDownLatch(1);
         autoButton = findViewById(R.id.autoButton);
         autoButton.setOnClickListener(v -> {
             //This is where the auto commands will be put for auto control --------------------------------------------------------------------------------------------
             if (connectionFlag){
-                autoControlFlag = true;
-                telloConnect("takeoff");
-                sleep(9000);
-                telloConnect("go 200 0 100 100");
-                sleep(9000);
-                telloConnect("cw 90");
-                sleep(9000);
-                telloConnect("forward 200");
-                sleep(9000);
-                telloConnect("cw 90");
-                sleep(9000);
-                telloConnect("forward 200");
-                sleep(9000);
-                telloConnect("cw 90");
-                sleep(9000);
-                telloConnect("forward 200");
-                sleep(9000);
-                telloConnect("cw 90");
-                sleep(9000);
-                telloConnect("land");
+//                autoControlFlag = true;
+                    telloConnect("takeoff");
+                    sleep(10000);
+                    telloConnect("go 200 0 100 100");
+                    sleep(10000);
+                    telloConnect("cw 90");
+                    sleep(10000);
+                    telloConnect("forward 200");
+                    sleep(10000);
+                    telloConnect("cw 90");
+                    sleep(10000);
+                    telloConnect("forward 200");
+                    sleep(10000);
+                    telloConnect("cw 90");
+                    sleep(10000);
+                    telloConnect("forward 200");
+                    sleep(10000);
+                    telloConnect("cw 90");
+                    sleep(10000);
+                    telloConnect("land");
 
-                autoControlFlag = false;
+
+//                autoControlFlag = false;
                 // While autoControlFlag is true, need to disable all the other buttons
             }
         });
 
-        // Testing codes that I have been trying but does not work ------------------------------------------------------------------------------------------------------
-//        autoButton.setOnClickListener(v -> {
-//
-//                if (connectionFlag) {
-//                    telloConnect(commands[commandIndex]);
-//                    commandIndex++;
-//                    if (commandIndex >= commands.length) {
-//                        commandIndex = 0;
-//                        connectionFlag = false;
-//                    }
-//                    autoButton.setOnClickListener(v);
-//                }
-
-//                if (connectionFlag) {
-//
-//                    telloConnect("command");
-//                    new Thread(new Runnable() { // create a new runnable thread to handle flight
-//                        public void run() {
-//
-//                            while (commands.length < 13) {
-//                                sleep(2000);
-//                                telloConnect(commands[commandIndex]);
-//                                commandIndex++;
-//                            }
-//                        }
-//                    }).start();
-//                }
-//        });
-
         // Feeding the view and display on the screen
         FeedingVideoAuto = findViewById(R.id.FeedingViewAuto);
-
+        jResults = findViewById(R.id.DetectionResultViewAuto); // this is a custom view that will display the object detection results (bounding boxes) on top of video Feed
         videoFeedAuto = findViewById(R.id.videoFeedAuto);
         videoFeedAuto.setOnClickListener(view -> {
             if (connectionFlag) {
                 if (videoFeedAuto.isChecked()) {
                     videoStreamFlag = true;
+                    detectionFlag = true;
+                    videoFeedAuto.setBackgroundResource(R.drawable.rounded_corner_green);
                     try {
                         BlockingQueue<Bitmap> frameV = new LinkedBlockingQueue<>(2);
                         videoHandler("streamon", frameV);
                         Runnable DLV = new AutomaticControl.displayBitmap(frameV);
                         new Thread(DLV).start();
+                        Runnable r = new objectDetectionThread(frameV);
+                        new Thread(r).start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -174,10 +190,14 @@ public class AutomaticControl extends AppCompatActivity {
                 if (!videoFeedAuto.isChecked()) {
                     telloConnect("streamoff");
                     videoStreamFlag = false;
+                    detectionFlag = false;
+                    videoFeedAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
                 }
             } else {
                 Toast.makeText(AutomaticControl.this, "Drone disconnected", Toast.LENGTH_SHORT);
                 videoFeedAuto.setChecked(false);
+                detectionFlag = false;
+                videoFeedAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
             }
         });
 
@@ -394,12 +414,7 @@ public class AutomaticControl extends AppCompatActivity {
                                 int outputIndex = m_codec.dequeueOutputBuffer(info, 100); // set it back to 0 if there is error associate with this change in value
 
                                 if (outputIndex >= 0){
-//
-//                                    if (!detectionFlag){
-//                                        m_codec.releaseOutputBuffer(outputIndex, false); // true if the surfaceView is available
-//                                    }
-//
-//                                    else if (detectionFlag){
+
                                     try {
                                         Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format
                                         Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format
@@ -487,4 +502,94 @@ public class AutomaticControl extends AppCompatActivity {
             }
         }
     }
+
+    // ===================================================================================================Detection Handler===============================================================================================
+    // ===========================================================================================================================================================================================================
+    public class objectDetectionThread implements Runnable{
+
+        private Bitmap threadBM;                            // create a bitmap variable
+        private volatile ArrayList results;                 // create an array list to store the object detection result
+        protected BlockingQueue threadFrame = null;         // blocking queue variable to take the data from blocking queue
+
+        public  objectDetectionThread(BlockingQueue consumerQueue){
+            this.threadFrame = consumerQueue;               // retrieve element from queue
+        }
+
+        @WorkerThread
+        @Nullable
+        public void run(){
+            while (true){
+                try {
+                    threadBM = (Bitmap) threadFrame.take();
+                    threadFrame.clear();                    // clear queue after getting the frame
+                    analyseImage(threadBM);                 // function that will analyze the image for object detection
+                    sleep(250);                         // change to 1000 if error arises
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        public ArrayList getValue(){
+            return results;
+        }
+    }   // end of objectDetectionThread function
+
+    static class ResA{
+        private final ArrayList<Result> jResults;
+        public ResA(ArrayList<Result> results){
+            jResults = results;
+        }
+    }
+
+    // ===================================================================================================Detection Analyze===============================================================================================
+    // ===========================================================================================================================================================================================================
+    @WorkerThread
+    @Nullable
+    protected AutomaticControl.ResA analyseImage(Bitmap BMtest){
+        try {
+            if (jMod == null){
+                jMod = LiteModuleLoader.load(AutomaticControl.assetFilePath(getApplicationContext(),"yolov5s.torchscript.ptl"));        // load pre-trained pytorch module from the assets folder
+                BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("classes.txt")));                       // similarly load the classes.txt from assets
+                String line;
+                List<String> classes = new ArrayList<>();
+                while ((line = br.readLine()) != null) {
+                    classes.add(line);
+                }
+                ImageProcessing.jClasses = new String[classes.size()];
+                classes.toArray(ImageProcessing.jClasses);
+            }
+        }catch (IOException e){
+            Log.e("Object detection: ", "Unable to load model...");
+            return null;
+        }
+
+        Matrix M = new Matrix();
+//        M.postRotate(90.0f);
+        BMtest = Bitmap.createBitmap(BMtest, 0,0, BMtest.getWidth(), BMtest.getHeight(), M, true);
+        Bitmap resizedBM = Bitmap.createScaledBitmap(BMtest, ImageProcessing.jInputW, ImageProcessing.jInputH, true); // crate a bitmap of 640x640 dimension
+
+        // DL model inference starts here
+        final Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(resizedBM, ImageProcessing.NO_MEAN_RGB, ImageProcessing.NO_STD_RGB);
+        IValue[] oTuple = jMod.forward(IValue.from(inputTensor)).toTuple();
+        final Tensor oTensor = oTuple[0].toTensor();
+        final float[] O = oTensor.getDataAsFloatArray();
+
+        float imSX = (float)BMtest.getWidth() / ImageProcessing.jInputW;
+        float imSY = (float)BMtest.getHeight() / ImageProcessing.jInputH;
+        float ivSX = (float)jResults.getWidth() /BMtest.getWidth();
+        float ivSY = (float)jResults.getHeight() /BMtest.getHeight();
+
+        final ArrayList<Result> results = ImageProcessing.outputsNMSFilter(O, rtThreshold, imSX, imSY, ivSX, ivSY, 0, 0);
+        int listSize =results.size();
+        if (results != null){
+            runOnUiThread(() -> {
+                jResults.setResults(results);
+                jResults.invalidate();
+            });
+        }
+        return  new AutomaticControl.ResA(results);
+
+    }
 }
+
+
