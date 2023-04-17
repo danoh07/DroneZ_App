@@ -1,11 +1,23 @@
 # DroneZ App for connecting the drone to the users Phone
 
-## This projects aims to:
-- Create a UI for controlling future DroneZ drone 
-- Handles drone using virtual controls
-- Set Path for drones to go in given map environment 
-- Stream video from the drone to the phone 
-- Support multiplatform: IOS and Andriod support 
+## In this project, there are currently two applications:
+- #### Flutter application
+- #### Andriod Stuido application 
+
+In the future we plan to implement more features from the Andriod Stuido applaction to the Flutter application for cross platform support. 
+
+## Flutter App Features:
+- Connect to Tello drone
+- Manaual Controls for the Tello drone
+- Automatic Controls for the Tello drone where users can excute pre-programmed paths
+- receieve stream data from the Tello drone 
+
+## Andriod Studio App Features:
+- Connect to Tello drone
+- Manaual Controls for the Tello drone
+- Automatic Controls for the Tello drone where users can excute pre-programmed paths
+- Display video stream and preform YOLO object dectection algorithm 
+- Record videos from Tello video stream
 
 ## Getting Started
 - To deploy the application on your machine, you will need to install Dart, Flutter, and Android Studio 
@@ -19,16 +31,17 @@
 ## Installation 
 With the environment configured, just clone this repository. 
 You might also need to add any packages that might not be installed.
-The only package that this projected imported is ryze_tello, you can install it by running the following code in your terminal:
-```
-flutter pub add ryze_tello
-```
-```
-flutter pub add flutter_joystick
-```
-### Notice
-The flutter app written in Dart, only has the wireframe for UI for future Drone Z. We are working on converting the code we have in Android Studio into Dart for future multiplatform support
 
-### If you want to use the working controller
-Open android studio > open app_AS_only > Build > run app (preferably connecting your phone)
 
+## Running Builds
+### For Flutter application: 
+- once in the cloned directory, execute:
+```
+flutter run 
+```
+
+### For Andriod Studio application
+Open android studio > navigate to cloned directory and open app_AS_only > Build > run app (preferably connecting your phone)
+
+## Notice
+- video stream feature don't work on emulator devices because of connection issues between the device and the drone. If you want full functionalities please test on actual andriod devices. 
