@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'package:ryze_tello/ryze_tello.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
-import 'tello_stream_video.dart';
 import 'utilities.dart' as util;
+import 'tello_video_player.dart';
 
 class ManualControlPage extends StatefulWidget {
   ManualControlPage({super.key});
@@ -20,11 +21,12 @@ class _ManualControlPageState extends State<ManualControlPage> {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
     ]);
   }
 
   late final Tello tello;
-  late final TelloStream telloStream;
   bool _streamOn = false;
   bool _connected = false;
 
@@ -48,15 +50,8 @@ class _ManualControlPageState extends State<ManualControlPage> {
           Navigator.pop(context);
         }),
         Center(
-          child: SizedBox(
-            height: 300,
-            width: 600,
-            child: _streamOn
-                ? TelloVideoWidget(
-                    telloStream: telloStream,
-                    tello: tello,
-                  )
-                : Container(color: Colors.blue),
+          child: Container(
+            child: _streamOn ? VideoBufferPlayer() : SizedBox.shrink(),
           ),
         ),
         Column(
@@ -156,10 +151,10 @@ class _ManualControlPageState extends State<ManualControlPage> {
                       if (_connected) {
                         try {
                           await tello.startVideo();
-                          var tellovid = await TelloStream.telloStream();
+                          // var tellovid = await TelloStream.telloStream();
 
                           setState(() {
-                            telloStream = tellovid;
+                            // telloStream = tellovid;
                             _streamOn = true;
                             print('Stream on');
                           });
@@ -196,6 +191,52 @@ class _ManualControlPageState extends State<ManualControlPage> {
           ],
         ),
       ]),
+    );
+  }
+}
+
+class DisplayState extends StatefulWidget {
+  final Tello tello;
+
+  DisplayState({required this.tello});
+
+  @override
+  State<DisplayState> createState() => _DisplayStateState();
+}
+
+class _DisplayStateState extends State<DisplayState> {
+  int battery = 0;
+  int flightTime = 0;
+  late StreamSubscription<TelloState> stateListener;
+
+  @override
+  void initState() {
+    super.initState();
+    stateListener = widget.tello.state.listen((TelloState state) {
+      setState(() {
+        battery = state.battery;
+        flightTime = state.flightTime;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          height: 20,
+          width: 20,
+          child: Text('$battery'),
+        ),
+        SizedBox(width: 30),
+        SizedBox(
+          height: 20,
+          width: 20,
+          child: Text('$flightTime'),
+        ),
+      ],
     );
   }
 }

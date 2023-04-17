@@ -1,5 +1,4 @@
-import 'dart:async';
-import 'package:ryze_tello/ryze_tello.dart';
+import 'automatic_page.dart';
 import 'package:flutter/material.dart';
 import 'manual_control_page.dart';
 
@@ -57,63 +56,11 @@ class FlightControlOptionCard extends StatelessWidget {
                 width: 230,
                 height: 80,
                 child: ElevatedButton(
-                    onPressed: () async {
-                      // temporary to test will replace an actaul automatic page
-                      // TODO: implement Automatic control page
-                      print('Automatic');
-
-                      final Tello tello;
-
-                      try {
-                        tello = await Tello.tello();
-
-                        await Future.delayed(const Duration(seconds: 4));
-
-                        await tello.takeoff();
-                        print('take off');
-                        await Future.delayed(const Duration(seconds: 1));
-
-                        tello.remoteControl(yaw: 90);
-                        print('rotate');
-                        await Future.delayed(const Duration(seconds: 5));
-
-                        // await tello.fly(FlyDirection.forward, 300);
-                        // print('forward');
-
-                        // await tello.rotate(-90);
-                        // print('rotate -90');
-
-                        // await tello.flyToPosition(
-                        //     x: 500, y: 0, z: 0, speed: 100);
-                        // print('fly to 500 forwards');
-
-                        // await tello.rotate(-90);
-                        // print('1');
-
-                        // await tello.fly(FlyDirection.forward, 500);
-                        // print('1');
-
-                        // await tello.rotate(-90);
-                        // print('1');
-
-                        // await tello.flyToPosition(
-                        //     x: 500, y: 0, z: -100, speed: 100);
-                        // print('1');
-
-                        // await tello.rotate(-90);
-                        // print('1');
-
-                        // await tello.fly(FlyDirection.forward, 200);
-                        // print('1');
-
-                        await tello.land();
-                        print('1');
-
-                        tello.disconnect();
-                      } catch (error, stacktrace) {
-                        print("Error: $error");
-                        print("Stack Trace: $stacktrace");
-                      }
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AutomaticController()));
                     },
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
