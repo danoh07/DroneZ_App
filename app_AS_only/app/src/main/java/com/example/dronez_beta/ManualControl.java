@@ -1,35 +1,74 @@
 package com.example.dronez_beta;
 
+import static android.app.UiModeManager.MODE_NIGHT_NO;
+import static android.app.UiModeManager.MODE_NIGHT_YES;
+import static android.content.ContentValues.TAG;
 import static android.os.SystemClock.sleep;
+import static org.bytedeco.opencv.global.opencv_core.finish;
 import static java.lang.Thread.interrupted;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.WorkerThread;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
 import android.media.Image;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
+import android.media.MediaRecorder;
+import android.media.MediaScannerConnection;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseIntArray;
+import android.view.Surface;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -38,13 +77,24 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.pytorch.IValue;
+import org.pytorch.LiteModuleLoader;
+import org.pytorch.Module;
+import org.pytorch.Tensor;
+import org.pytorch.torchvision.TensorImageUtils;
 
 import io.github.controlwear.virtual.joystick.android.JoystickView;
 
@@ -64,17 +114,62 @@ public class ManualControl extends AppCompatActivity {
     private Handler telloStateHandler;  // and handler needs to be created to display the tello state values in the UI in realtime
     private boolean connectionFlag = false; // to check and maintain the connection status of the drone. Initially the drone is not conected, so the status is false
     private int connectionClickCounter = 1; // for counting the number of times the button is clicked
+
+    // Video feeding & Recording
     private Switch videoFeeding;
     private boolean videoStreamFlag = false;   // Tracking the video feeding status
     long startMs;                       // variable to calculate the time difference for video codec
     private MediaCodec m_codec;         // MediaCodec is used to decode the incoming H.264 stream from tello drone
 
+    private ToggleButton videocam;
+    private int videoRecordCounter = 1;
+    private boolean isRecording = false;
+
+    private static final String TAG = "ManualControl";
+    private static final int REQUEST_CODE = 100;
+    private int mScreenDensity;
+    private MediaProjectionManager mProjectionManager;
+    private static final int DISPLAY_WIDTH = 720;
+    private static final int DISPLAY_HEIGHT = 1280;
+    private MediaProjection mMediaProjection;
+    private VirtualDisplay mVirtualDisplay;
+    private MediaProjectionCallback mMediaProjectionCallback;
+    private MediaRecorder mMediaRecorder;
+    private static final int REQUEST_PERMISSIONS = 10;
+
+    // Detection
+    private boolean detectionFlag;      // Tracking if the user wants to do object detection
+    private FloatingActionButton DroneObjectDetection;
+    private Module jMod = null;
+    private DetectionResult jResults;
+    private float rtThreshold = 0.60f;
+
+    public static String assetFilePath(Context context, String assetName) throws IOException {
+        File file = new File(context.getFilesDir(), assetName);
+        if (file.exists() && file.length() > 0) {
+            return file.getAbsolutePath();
+        }
+
+        try (InputStream is = context.getAssets().open(assetName)) {
+            try (OutputStream os = new FileOutputStream(file)) {
+                byte[] buffer = new byte[4 * 1024];
+                int read;
+                while ((read = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
+                }
+                os.flush();
+            }
+            return file.getAbsolutePath();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE); // remove title bar from android screen
         // Removes the action bar
         getSupportActionBar().hide();
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_manual_control);
 
         // Sets the  background color white
@@ -85,18 +180,47 @@ public class ManualControl extends AppCompatActivity {
             getWindow().setStatusBarColor(Color.parseColor("#000000"));
         }
 
-        FeedingView = findViewById(R.id.bitView);
+        // ===================================================================================================Recording===============================================================================================
+        // ===========================================================================================================================================================================================================
+        // Saving the video feed into album
+        videocam = findViewById(R.id.videocam);
 
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mScreenDensity = metrics.densityDpi;
+
+        mMediaRecorder = new MediaRecorder();
+
+        mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+        videocam.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ContextCompat.checkSelfPermission(ManualControl.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) + ContextCompat
+                        .checkSelfPermission(ManualControl.this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    onToggleScreenShare(v);
+                }
+            }
+        });
+
+        // ===================================================================================================Video Feeding & Detection===============================================================================================
+        // ===========================================================================================================================================================================================================
+        FeedingView = findViewById(R.id.bitView);
+        jResults = findViewById(R.id.DetectionResultView); // this is a custom view that will display the object detection results (bounding boxes) on top of video Feed
         videoFeeding = findViewById(R.id.videoFeed);
         videoFeeding.setOnClickListener(view -> {
             if (connectionFlag) {
                 if (videoFeeding.isChecked()) {
                     videoStreamFlag = true;
+                    detectionFlag = true;
+                    videoFeeding.setBackgroundResource(R.drawable.rounded_corner_green);
                     try {
                         BlockingQueue<Bitmap> frameV = new LinkedBlockingQueue<>(2);
                         videoHandler("streamon", frameV);
                         Runnable DLV = new displayBitmap(frameV);
                         new Thread(DLV).start();
+                        Runnable r = new objectDetectionThread(frameV);
+                        new Thread(r).start();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -104,13 +228,20 @@ public class ManualControl extends AppCompatActivity {
                 if (!videoFeeding.isChecked()) {
                     telloConnect("streamoff");
                     videoStreamFlag = false;
+                    detectionFlag = false;
+                    videoFeeding.setBackgroundResource(R.drawable.rounded_corner_trans);
+
                 }
             } else {
                 Toast.makeText(ManualControl.this, "Drone disconnected", Toast.LENGTH_SHORT);
                 videoFeeding.setChecked(false);
+                detectionFlag = false;
+                videoFeeding.setBackgroundResource(R.drawable.rounded_corner_trans);
             }
         });
 
+        // ===================================================================================================Connection===============================================================================================
+        // ===========================================================================================================================================================================================================
         telloStateHandler = new Handler();
 
         droneBattery = findViewById(R.id.droneBattery);
@@ -131,15 +262,11 @@ public class ManualControl extends AppCompatActivity {
                     Toast.makeText(ManualControl.this, "Drone disconnected", Toast.LENGTH_SHORT).show();
                 }
                 connectionClickCounter++;
-//                if (connectionFlag){
-//                    wifiConnection.setText("Connected");
-//                }
-//                else if (!connectionFlag){
-//                    wifiConnection.setText("Disconnected");
-//                }
             }
         });
 
+        // ===================================================================================================Commands===============================================================================================
+        // ===========================================================================================================================================================================================================
         // Click takeoff button to send "takeoff" command to drone
         takeoff = findViewById(R.id.takeoff);
         takeoff.setOnClickListener(v -> {
@@ -156,52 +283,55 @@ public class ManualControl extends AppCompatActivity {
             }
         });
 
-
+        // ===================================================================================================Joysticks===============================================================================================
+        // ===========================================================================================================================================================================================================
         leftjoystick = findViewById(R.id.joystickViewLeft); // left joystick where the angle is the movement angle and strength is the extend to which you push the joystick
         leftjoystick.setOnMoveListener((angle, strength) -> {
 
-            if (angle >45 && angle <=135){
-                RC[2]= strength;
+            if (angle > 45 && angle <= 135) {
+                RC[2] = strength;
             }
-            if (angle >226 && angle <=315){
+            if (angle > 226 && angle <= 315) {
                 strength *= -1;
-                RC[2]= strength;
+                RC[2] = strength;
             }
-            if (angle >135 && angle <=225){
+            if (angle > 135 && angle <= 225) {
                 strength *= -1;
-                RC[3]= strength;
+                RC[3] = strength;
             }
-            if (angle >316 && angle <=359 || angle >0 && angle <=45){
-                RC[3]= strength;
+            if (angle > 316 && angle <= 359 || angle > 0 && angle <= 45) {
+                RC[3] = strength;
             }
 
-            telloConnect("rc "+ RC[0] +" "+ RC[1] +" "+ RC[2] +" "+ RC[3]); // send the command eg,. 'rc 10 00 32 00'
+            telloConnect("rc " + RC[0] + " " + RC[1] + " " + RC[2] + " " + RC[3]); // send the command eg,. 'rc 10 00 32 00'
             Arrays.fill(RC, 0); // reset the array with 0 after every virtual joystick move
 
         });
 
         rightjoystick = findViewById(R.id.joystickViewRight);
         rightjoystick.setOnMoveListener((angle, strength) -> {
-            if (angle >45 && angle <=135){
-                RC[1]= strength;
+            if (angle > 45 && angle <= 135) {
+                RC[1] = strength;
             }
-            if (angle >226 && angle <=315){
+            if (angle > 226 && angle <= 315) {
                 strength *= -1;
-                RC[1]= strength;
+                RC[1] = strength;
             }
-            if (angle >135 && angle <=225){
+            if (angle > 135 && angle <= 225) {
                 strength *= -1;
-                RC[0]= strength;
+                RC[0] = strength;
             }
-            if (angle >316 && angle <=359 || angle >0 && angle <=45){
-                RC[0]= strength;
+            if (angle > 316 && angle <= 359 || angle > 0 && angle <= 45) {
+                RC[0] = strength;
             }
 
-            telloConnect("rc "+ RC[0] +" "+ RC[1] +" "+ RC[2] +" "+ RC[3]);
+            telloConnect("rc " + RC[0] + " " + RC[1] + " " + RC[2] + " " + RC[3]);
             Arrays.fill(RC, 0); // reset the array with 0 after every virtual joystick move
         });
     }
 
+    // ===================================================================================================Connection Handler===============================================================================================
+    // ===========================================================================================================================================================================================================
     // Connects with tello drone
     public void telloConnect(final String strCommand) {
         new Thread(new Runnable() { // create a new runnable thread to handle tello state
@@ -257,16 +387,16 @@ public class ManualControl extends AppCompatActivity {
                                             public void run() {
                                                 try {
                                                     droneBattery.setText("Battery: " + dec.get(10) + "%");
-//                                                        if (Integer.parseInt(dec.get(10)) <= 15){
-//                                                            jdroneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
-//                                                        }
-//                                                        else {
-//                                                            jdroneBattery.setBackgroundResource(R.drawable.rounded_corner_green); // else display batter percentage with green background
-//                                                        }
+                                                    if (Integer.parseInt(dec.get(10)) <= 15) {
+                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
+                                                    } else {
+                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_green);
+                                                    }
                                                     if (Integer.parseInt(dec.get(10)) != 0) {
-//                                                            wifiConnection.setBackgroundResource(R.drawable.connect_drone);     // if wifi is connected and is active then display with green background
+                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
                                                         wifiConnection.setText("Connection: connected");
                                                     } else {
+                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_red);
                                                         wifiConnection.setText("Connection: disconnected");
                                                     }
 
@@ -300,13 +430,16 @@ public class ManualControl extends AppCompatActivity {
         }).start();
     }
 
-
+    // ===================================================================================================Video Feeding Handler===============================================================================================
+    // ===========================================================================================================================================================================================================
+    // --------------------------This is where the video handler is to start collecting YUVV Frames from drone in the queue and trying to convert it to Bitmap Frames-----------------------------------------------
     // retrieve the video from tello drone and decode it to display on the UI
     public void videoHandler(final String strCommand, final BlockingQueue frameV) throws IOException { // add this for surfaceView : , Surface surface
         telloConnect(strCommand);
 
         BlockingQueue queue = frameV; // create a BlockingQueue since this function creates a thread and outputs a video frame which has to be displayed on the UI thread
-        if (strCommand == "streamon"){
+        BlockingQueue recording_queue = frameV;
+        if (strCommand == "streamon") {
             new Thread(new Runnable() {
                 Boolean streamon = true;    // keeps track if the video stream is on or off
 
@@ -322,13 +455,13 @@ public class ManualControl extends AppCompatActivity {
                     // by default the tello outputs 960 x 720 video
                     format.setInteger(MediaFormat.KEY_WIDTH, 960);
                     format.setInteger(MediaFormat.KEY_HEIGHT, 720);
-                    format.setInteger(MediaFormat.KEY_CAPTURE_RATE,30);         // 30 fps
-                    format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible); // the output is a YUV420 format which need to be converted later
+                    format.setInteger(MediaFormat.KEY_CAPTURE_RATE, 30);         // 30 fps
+                    format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible); // the output is a YUV420 format which need to be converted later -----------The initial format of the Frame (YUV), which we need to collect for recording-------------------
                     format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 960 * 720);
 
                     try {
                         m_codec = MediaCodec.createDecoderByType(MediaFormat.MIMETYPE_VIDEO_AVC);  // initialize the decoder with AVC format.
-                        m_codec.configure(format, null ,null,0); // pass the format configuration to media codec with surface 'null' if processing the video for tasks like object detection, if not set to true
+                        m_codec.configure(format, null, null, 0); // pass the format configuration to media codec with surface 'null' if processing the video for tasks like object detection, if not set to true
                         startMs = System.currentTimeMillis();   //calculate time to pass to the codec
                         m_codec.start();
 
@@ -358,7 +491,7 @@ public class ManualControl extends AppCompatActivity {
                             int len = videoPacket.getLength();
                             output.write(pacMan);
                             if (len < 1460) {                               // each frame of video from tello is 1460 bytes in size, with the ending frame that is usually less than <1460 bytes which indicate end of a sequence
-                                destPos=0;
+                                destPos = 0;
                                 byte[] data = output.toByteArray();         // one the stream reaches the end of sequence, the entire byte array containing one complete frame is passed to data and the output variable is reset to receive newer frames
                                 output.reset();                             // reset to receive newer frame
                                 output.flush();
@@ -366,7 +499,7 @@ public class ManualControl extends AppCompatActivity {
                                 int inputIndex = m_codec.dequeueInputBuffer(-1);
                                 if (inputIndex >= 0) {
                                     ByteBuffer buffer = m_codec.getInputBuffer(inputIndex);
-                                    if (buffer != null){
+                                    if (buffer != null) {
                                         buffer.clear(); // exp
                                         buffer.put(data); //  Caused by: java.lang.NullPointerException: Attempt to get length of null array // if nothing else pass: data
                                         long presentationTimeUs = System.currentTimeMillis() - startMs;
@@ -377,30 +510,27 @@ public class ManualControl extends AppCompatActivity {
                                 MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
                                 int outputIndex = m_codec.dequeueOutputBuffer(info, 100); // set it back to 0 if there is error associate with this change in value
 
-                                if (outputIndex >= 0){
-//
-//                                    if (!detectionFlag){
-//                                        m_codec.releaseOutputBuffer(outputIndex, false); // true if the surfaceView is available
-//                                    }
-//
-//                                    else if (detectionFlag){
+                                if (outputIndex >= 0) {
+
+                                    try {
+                                        // ------------------------------------------------Basically, before converting the YUV to Image format below, we need to store the data if recording started ------------------------------------------------------
+                                        Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format ---------------------------Storing the YUV decoded frame into Image format-----------------------------
+
+                                        //-------------------------------------------------Or we can try to convert Image Frame back to YUV before the below line starts, which I feel is redundant though if we can store it before----------------------------
+                                        Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format -----------------------------------------------Converting from Image to Bitmap format
                                         try {
-                                            Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format
-                                            Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format
-                                            try {
-                                                if (!queue.isEmpty()){
-                                                    queue.clear();
-                                                }
-                                                queue.put(BM);                                 // pass the data to the queue created earlier
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
+                                            if (!queue.isEmpty()) {
+                                                queue.clear();
                                             }
-                                        } catch (Exception e) {
+                                            queue.put(BM);                                 // pass the data to the queue created earlier
+                                        } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
-                                        m_codec.releaseOutputBuffer(outputIndex, false); // true if the surface is available
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
                                     }
-//                                }
+                                    m_codec.releaseOutputBuffer(outputIndex, false); // true if the surface is available
+                                }
                             }
                         }
                     } catch (SocketException socketException) {
@@ -412,16 +542,18 @@ public class ManualControl extends AppCompatActivity {
             }).start();
 
         }
-        if (strCommand == "streamoff"){
-            Log.d("Codec State","stopped and released called...");
+        if (strCommand == "streamoff") {
+            Log.d("Codec State", "stopped and released called...");
             m_codec.stop();         // stop and release the codec
             m_codec.release();
         }
 
     }
 
-
-    private Bitmap imgToBM(Image image){        // convert from Image to Bitmap format for neural network processing.
+    // ===================================================================================================Frame conversion===============================================================================================
+    // ===========================================================================================================================================================================================================
+    // --------------------------------------------------------------------------------Helper function to conver the Image Frame to Bitmap Frame that is done above----------------------------------------------------------------------------------------
+    private Bitmap imgToBM(Image image) {        // convert from Image to Bitmap format for neural network processing.
         Image.Plane[] p = image.getPlanes();
         ByteBuffer y = p[0].getBuffer();
         ByteBuffer u = p[1].getBuffer();
@@ -438,28 +570,31 @@ public class ManualControl extends AppCompatActivity {
 
         YuvImage yuvImage = new YuvImage(jm8, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0,0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
+        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
         byte[] imgBytes = out.toByteArray();
-        return BitmapFactory.decodeByteArray(imgBytes, 0 , imgBytes.length);
+        return BitmapFactory.decodeByteArray(imgBytes, 0, imgBytes.length);
     }
 
-    public class displayBitmap implements Runnable{
+    // ===================================================================================================Feeding Handler===============================================================================================
+    // ===========================================================================================================================================================================================================
+    // ----------------------------------------------------------------------By popping the stored Bipmap Frame queue, display it on the screen----------------------------------------------------------------------------------------------------
+    public class displayBitmap implements Runnable {
 
         protected BlockingQueue displayQueue;       // create a blocking queue to get the data from queue
         protected Bitmap displayBitmap_;             // create a bitmap variable for displaying bitmap
 
-        public displayBitmap(BlockingQueue displayQueue_){
+        public displayBitmap(BlockingQueue displayQueue_) {
             this.displayQueue = displayQueue_;
         }
 
         @Override
-        public void run(){
+        public void run() {
 
-            while (true){
+            while (true) {
                 try {
                     displayBitmap_ = (Bitmap) displayQueue.take();           // take data (video frame) from blocking queue
                     displayQueue.clear();                                   // clear the queue after taking
-                    if (displayQueue != null){
+                    if (displayQueue != null) {
                         runOnUiThread(() -> {                               // needs to be on UI thread
                             FeedingView.setImageBitmap(displayBitmap_);     // set the bitmap to current frame in the queue
                             FeedingView.invalidate();
@@ -471,5 +606,221 @@ public class ManualControl extends AppCompatActivity {
             }
         }
     }
+
+    // ===================================================================================================Detection Handler===============================================================================================
+    // ===========================================================================================================================================================================================================
+    public class objectDetectionThread implements Runnable {
+
+        private Bitmap threadBM;                            // create a bitmap variable
+        private volatile ArrayList results;                 // create an array list to store the object detection result
+        protected BlockingQueue threadFrame = null;         // blocking queue variable to take the data from blocking queue
+
+        public objectDetectionThread(BlockingQueue consumerQueue) {
+            this.threadFrame = consumerQueue;               // retrieve element from queue
+        }
+
+        @WorkerThread
+        @Nullable
+        public void run() {
+            while (true) {
+                try {
+                    threadBM = (Bitmap) threadFrame.take();
+                    threadFrame.clear();                    // clear queue after getting the frame
+                    analyseImage(threadBM);                 // function that will analyze the image for object detection
+                    sleep(250);                         // change to 1000 if error arises
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public ArrayList getValue() {
+            return results;
+        }
+    }   // end of objectDetectionThread function
+
+    static class ResA {
+        private final ArrayList<Result> jResults;
+
+        public ResA(ArrayList<Result> results) {
+            jResults = results;
+        }
+    }
+
+    // ===================================================================================================Detection Analyze===============================================================================================
+    // ===========================================================================================================================================================================================================
+    @WorkerThread
+    @Nullable
+    protected ManualControl.ResA analyseImage(Bitmap BMtest) {
+        try {
+            if (jMod == null) {
+                jMod = LiteModuleLoader.load(ManualControl.assetFilePath(getApplicationContext(), "yolov5s.torchscript.ptl"));        // load pre-trained pytorch module from the assets folder
+                BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("classes.txt")));                       // similarly load the classes.txt from assets
+                String line;
+                List<String> classes = new ArrayList<>();
+                while ((line = br.readLine()) != null) {
+                    classes.add(line);
+                }
+                ImageProcessing.jClasses = new String[classes.size()];
+                classes.toArray(ImageProcessing.jClasses);
+            }
+        } catch (IOException e) {
+            Log.e("Object detection: ", "Unable to load model...");
+            return null;
+        }
+
+        Matrix M = new Matrix();
+//        M.postRotate(90.0f);
+        BMtest = Bitmap.createBitmap(BMtest, 0, 0, BMtest.getWidth(), BMtest.getHeight(), M, true);
+        Bitmap resizedBM = Bitmap.createScaledBitmap(BMtest, ImageProcessing.jInputW, ImageProcessing.jInputH, true); // crate a bitmap of 640x640 dimension
+
+        // DL model inference starts here
+        final Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(resizedBM, ImageProcessing.NO_MEAN_RGB, ImageProcessing.NO_STD_RGB);
+        IValue[] oTuple = jMod.forward(IValue.from(inputTensor)).toTuple();
+        final Tensor oTensor = oTuple[0].toTensor();
+        final float[] O = oTensor.getDataAsFloatArray();
+
+        float imSX = (float) BMtest.getWidth() / ImageProcessing.jInputW;
+        float imSY = (float) BMtest.getHeight() / ImageProcessing.jInputH;
+        float ivSX = (float) jResults.getWidth() / BMtest.getWidth();
+        float ivSY = (float) jResults.getHeight() / BMtest.getHeight();
+
+        final ArrayList<Result> results = ImageProcessing.outputsNMSFilter(O, rtThreshold, imSX, imSY, ivSX, ivSY, 0, 0);
+        int listSize = results.size();
+        if (results != null) {
+            runOnUiThread(() -> {
+                jResults.setResults(results);
+                jResults.invalidate();
+            });
+        }
+        return new ManualControl.ResA(results);
+
+    }
+//}
+
+//====================================================================Recording Handler==========================================================================
+//========================================================Needs to be debugged - Not saving the data==========================================================================
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_CODE) {
+            Log.e(TAG, "Unknown request code: " + requestCode);
+            return;
+        }
+        if (resultCode != RESULT_OK) {
+            Toast.makeText(this, "Screen Cast Permission Denied", Toast.LENGTH_SHORT).show();
+            videocam.setChecked(false);
+            return;
+        }
+        mMediaProjectionCallback = new MediaProjectionCallback();
+        mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
+        mMediaProjection.registerCallback(mMediaProjectionCallback, null);
+        mVirtualDisplay = createVirtualDisplay();
+        mMediaRecorder.start();
+    }
+
+    public void onToggleScreenShare(View view) {
+        if (((ToggleButton) view).isChecked()) {
+            initRecorder();
+            shareScreen();
+        } else {
+            mMediaRecorder.stop();
+            mMediaRecorder.reset();
+            Log.v(TAG, "Stop Recording");
+            stopScreenSharing();
+        }
+    }
+
+    private void shareScreen() {
+        if (mMediaProjection == null) {
+            startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
+            return;
+        }
+        mVirtualDisplay = createVirtualDisplay();
+        mMediaRecorder.start();
+    }
+
+    private VirtualDisplay createVirtualDisplay() {
+        return mMediaProjection.createVirtualDisplay("ManualControl",
+                DISPLAY_WIDTH, DISPLAY_HEIGHT, mScreenDensity,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                mMediaRecorder.getSurface(), null, null);
+    }
+
+    private void initRecorder() {
+        try {
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            mMediaRecorder.setOutputFile(Environment
+                    .getExternalStoragePublicDirectory(Environment
+                            .DIRECTORY_DOWNLOADS) + "/recorded_video.mp4");
+            mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mMediaRecorder.setVideoEncodingBitRate(512 * 1000);
+            mMediaRecorder.setVideoFrameRate(30);
+            mMediaRecorder.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class MediaProjectionCallback extends MediaProjection.Callback {
+        @Override
+        public void onStop() {
+            if (videocam.isChecked()) {
+                videocam.setChecked(false);
+                mMediaRecorder.stop();
+                mMediaRecorder.reset();
+                Log.v(TAG, "Recording Stopped");
+            }
+            mMediaProjection = null;
+            stopScreenSharing();
+        }
+    }
+
+    private void stopScreenSharing() {
+        if (mVirtualDisplay == null) {
+            return;
+        }
+        mVirtualDisplay.release();
+        //mMediaRecorder.release(); //If used: mMediaRecorder object cannot
+        // be reused again
+        destroyMediaProjection();
+    }
+
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        destroyMediaProjection();
+//    }
+
+    private void destroyMediaProjection() {
+        if (mMediaProjection != null) {
+            mMediaProjection.unregisterCallback(mMediaProjectionCallback);
+            mMediaProjection.stop();
+            mMediaProjection = null;
+        }
+        Log.i(TAG, "MediaProjection Stopped");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String permissions[],
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_PERMISSIONS: {
+                if ((grantResults.length > 0) && (grantResults[0] +
+                        grantResults[1]) == PackageManager.PERMISSION_GRANTED) {
+                    onToggleScreenShare(videocam);
+                }
+                break;
+            }
+        }
+    }
+
 }
+
 
