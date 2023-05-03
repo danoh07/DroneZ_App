@@ -241,7 +241,7 @@ public class AutomaticControl extends AppCompatActivity {
             public void onClick(View v) {
                 if (connectionFlag){
                     if (!directionCommand.equals("Direction") && !direction_value_Command.equals("Value")) {
-                        String submitDirectionCommand = directionCommand + direction_value_Command;
+                        String submitDirectionCommand = directionCommand + " " + direction_value_Command;
                         telloConnect(submitDirectionCommand);
                     }else{
                         Toast.makeText(AutomaticControl.this, "Please select Direction and Value", Toast.LENGTH_SHORT).show();
@@ -313,7 +313,7 @@ public class AutomaticControl extends AppCompatActivity {
             public void onClick(View v) {
                 if (connectionFlag) {
                     if (!rotationCommand.equals("Rotation") && !angleCommand.equals("Value")) {
-                        String submitRotationCommand = rotationCommand + angleCommand;
+                        String submitRotationCommand = rotationCommand + " " + angleCommand;
                         telloConnect(submitRotationCommand);
                     } else {
                         Toast.makeText(AutomaticControl.this, "Please select Rotation and Value", Toast.LENGTH_SHORT).show();
@@ -593,9 +593,10 @@ public class AutomaticControl extends AppCompatActivity {
                                                             droneBatteryAuto.setBackgroundResource(R.drawable.rounded_corner_green); // else display batter percentage with green background
                                                         }
                                                     if (Integer.parseInt(dec.get(10)) != 0) {
-                                                            wifiConnectionAuto.setBackgroundResource(R.drawable.connect_drone);     // if wifi is connected and is active then display with green background
+                                                        wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
                                                         wifiConnectionAuto.setText("Connection: connected");
                                                     } else {
+                                                        wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_red);
                                                         wifiConnectionAuto.setText("Connection: disconnected");
                                                     }
 
