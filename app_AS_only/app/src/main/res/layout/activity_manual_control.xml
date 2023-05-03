@@ -241,11 +241,11 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="86dp"
-        android:layout_marginTop="209dp"
-        android:layout_marginBottom="175dp"
-        android:text="Video "
-        android:textColor="@color/black"/>
+        android:layout_marginStart="69dp"
+        android:layout_marginTop="206dp"
+        android:layout_marginBottom="178dp"
+        android:text="View Video "
+        android:textColor="@color/black" />
 
     <TextView
         android:id="@+id/droneBattery"

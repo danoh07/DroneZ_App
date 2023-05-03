@@ -299,6 +299,8 @@ public class ManualControl extends AppCompatActivity{
         takeoff.setOnClickListener(v -> {
             if (connectionFlag) {
                 telloConnect("takeoff");
+            }else{
+                Toast.makeText(ManualControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -307,6 +309,8 @@ public class ManualControl extends AppCompatActivity{
         land.setOnClickListener(v -> {
             if (connectionFlag) {
                 telloConnect("land");
+            }else{
+                Toast.makeText(ManualControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
             }
         });
 
