@@ -6,6 +6,8 @@ import static java.lang.Thread.interrupted;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -26,10 +28,14 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -57,7 +63,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -69,16 +74,38 @@ public class AutomaticControl extends AppCompatActivity {
     private static final int[] RC = {0, 0, 0, 0};  // Integer array to store the strength from the joystick
     Pattern statePattern = Pattern.compile("-*\\d{0,3}\\.?\\d{0,2}[^\\D\\W\\s]");  // a regex pattern to read the tello state
 
+    private String[] direction_item = {"Direction","forward", "backward", "right", "left", "up", "down"};
+    private Spinner direction_menu;
+    ArrayAdapter<String> adapterItems;
+    private String directionCommand="";
+
+    private String[] rotation_item = {"Rotation", "cw", "ccw"};
+    private Spinner rotation_menu;
+    private String rotationCommand="";
+
+    private String[] direction_value_item = {"Value", "100", "200", "300", "400", "500"};
+    private Spinner direction_value_menu;
+    private String direction_value_Command="";
+
+    private String[] angle_item = {"Value", "45", "90", "135", "180", "225", "270", "315", "360"};
+    private Spinner angle_menu;
+    private String angleCommand="";
+
+    private Button takeoffAuto;
+    private Button landAuto;
+
     private Handler telloStateHandler;  // and handler needs to be created to display the tello state values in the UI in realtime
     private boolean connectionFlag = false; // to check and maintain the connection status of the drone. Initially the drone is not conected, so the status is false
     private int connectionClickCounter = 1; // for counting the number of times the button is clicked
+    private TextView droneBatteryAuto;
+    private TextView wifiConnectionAuto;
     private boolean videoStreamFlag = false;   // Tracking the video feeding status
     long startMs;                       // variable to calculate the time difference for video codec
     private MediaCodec m_codec;         // MediaCodec is used to decode the incoming H.264 stream from tello drone
 
     private ImageView connectToDrone;
-    private Button submit;
-    private EditText testCommand;
+    private Button submitDirection;
+    private Button submitRotation;
     private ImageView FeedingVideoAuto;
     private Switch videoFeedAuto;
     private Button autoButton;
@@ -89,6 +116,7 @@ public class AutomaticControl extends AppCompatActivity {
 //            "go 500 0 100 100", "ccw 90", "forward 500", "ccw 90", "go 500 0 -100 100", "ccw 90",
 //            " forward 200", "land"};
     private Boolean autoControlFlag = false;
+    private int autoControlClickCounter = 1;
 
     // Detection
     private boolean detectionFlag;      // Tracking if the user wants to do object detection
@@ -132,44 +160,296 @@ public class AutomaticControl extends AppCompatActivity {
             getWindow().setStatusBarColor(Color.parseColor("#000000"));
         }
 
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
+        takeoffAuto = findViewById(R.id.takeoffAuto);
+        takeoffAuto.setOnClickListener(v -> {
+            if (connectionFlag) {
+                telloConnect("takeoff");
+            }else{
+                Toast.makeText(AutomaticControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        landAuto = findViewById(R.id.landAuto);
+        landAuto.setOnClickListener(v -> {
+            if (connectionFlag){
+                telloConnect("land");
+            }else{
+                Toast.makeText(AutomaticControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        //====================================================DropDownBoxes for direction==============================================
+        //=============================================================================================================================
+        direction_menu = findViewById(R.id.direction_dropdown);
+        adapterItems = new ArrayAdapter<String>(AutomaticControl.this, R.layout.spinner_item, direction_item);
+        adapterItems.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        direction_menu.setAdapter(adapterItems);
+        submitDirection = findViewById(R.id.submitDirection);
+
+        direction_menu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String item = parent.getItemAtPosition(position).toString();
+                directionCommand = item;
+
+                if (directionCommand.equals("Direction") || direction_value_Command.equals("Value")) {
+                    submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                }else{
+                    submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        //====================================================DropDownBoxes for direction value==============================================
+        //=============================================================================================================================
+        direction_value_menu = findViewById(R.id.direction_value);
+        adapterItems = new ArrayAdapter<String>(AutomaticControl.this, R.layout.spinner_item, direction_value_item);
+        adapterItems.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        direction_value_menu.setAdapter(adapterItems);
+
+        direction_value_menu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String item = parent.getItemAtPosition(position).toString();
+                direction_value_Command = item;
+
+                if (directionCommand.equals("Direction") || direction_value_Command.equals("Value")) {
+                    submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                }else{
+                    submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        //====================================================Submitting Drop Down values==============================================
+        //=============================================================================================================================
+        submitDirection.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (connectionFlag){
+                    if (!directionCommand.equals("Direction") && !direction_value_Command.equals("Value")) {
+                        String submitDirectionCommand = directionCommand + direction_value_Command;
+                        telloConnect(submitDirectionCommand);
+                    }else{
+                        Toast.makeText(AutomaticControl.this, "Please select Direction and Value", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(AutomaticControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        //====================================================DropDownBoxes for rotation==============================================
+        //=============================================================================================================================
+        rotation_menu = findViewById(R.id.rotation_dropdown);
+        adapterItems = new ArrayAdapter<String>(AutomaticControl.this, R.layout.spinner_item, rotation_item);
+        adapterItems.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        rotation_menu.setAdapter(adapterItems);
+        submitRotation = findViewById(R.id.submitRotation);
+
+        rotation_menu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String item = parent.getItemAtPosition(position).toString();
+                rotationCommand = item;
+
+                if (rotationCommand.equals("Rotation") || angleCommand.equals("Value")) {
+                    submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                }else{
+                    submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        //====================================================DropDownBoxes for rotation value==============================================
+        //=============================================================================================================================
+        angle_menu = findViewById(R.id.rotation_value_dropdown);
+        adapterItems = new ArrayAdapter<String>(AutomaticControl.this, R.layout.spinner_item, angle_item);
+        adapterItems.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        angle_menu.setAdapter(adapterItems);
+
+        angle_menu.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String item = parent.getItemAtPosition(position).toString();
+                angleCommand = item;
+
+                if (rotationCommand.equals("Rotation") || angleCommand.equals("Value")) {
+                    submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                }else{
+                    submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        //====================================================Submitting Drop Down values==============================================
+        //=============================================================================================================================
+        submitRotation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (connectionFlag) {
+                    if (!rotationCommand.equals("Rotation") && !angleCommand.equals("Value")) {
+                        String submitRotationCommand = rotationCommand + angleCommand;
+                        telloConnect(submitRotationCommand);
+                    } else {
+                        Toast.makeText(AutomaticControl.this, "Please select Rotation and Value", Toast.LENGTH_SHORT).show();
+                    }
+                }else{
+                    Toast.makeText(AutomaticControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
 
         // Go button that will start the auto-pilot flight of the drone
 //        CountDownLatch latch = new CountDownLatch(1);
         autoButton = findViewById(R.id.autoButton);
         autoButton.setOnClickListener(v -> {
-            //This is where the auto commands will be put for auto control --------------------------------------------------------------------------------------------
-            if (connectionFlag){
-//                autoControlFlag = true;
-                    telloConnect("takeoff");
-                    sleep(10000);
-                    telloConnect("go 200 0 100 100");
-                    sleep(10000);
-                    telloConnect("cw 90");
-                    sleep(10000);
-                    telloConnect("forward 200");
-                    sleep(10000);
-                    telloConnect("cw 90");
-                    sleep(10000);
-                    telloConnect("forward 200");
-                    sleep(10000);
-                    telloConnect("cw 90");
-                    sleep(10000);
-                    telloConnect("forward 200");
-                    sleep(10000);
-                    telloConnect("cw 90");
-                    sleep(10000);
-                    telloConnect("land");
 
-
-//                autoControlFlag = false;
-                // While autoControlFlag is true, need to disable all the other buttons
+            telloConnect("takeoff");
+            long start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
             }
+
+            if (autoControlFlag) {
+                telloConnect("up 250");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if(autoControlFlag) {
+                telloConnect("forward 500");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("cw 90");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("forward 200");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("cw 90");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if(autoControlFlag) {
+                telloConnect("forward 500");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("cw 90");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("forward 200");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("cw 90");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+
+            if (autoControlFlag) {
+                telloConnect("land");
+                autoControlFlag = false;
+            }
+
         });
 
         // Feeding the view and display on the screen
         FeedingVideoAuto = findViewById(R.id.FeedingViewAuto);
         jResults = findViewById(R.id.DetectionResultViewAuto); // this is a custom view that will display the object detection results (bounding boxes) on top of video Feed
         videoFeedAuto = findViewById(R.id.videoFeedAuto);
+        FeedingVideoAuto.setImageDrawable(getDrawable(R.drawable.empty_img));
         videoFeedAuto.setOnClickListener(view -> {
             if (connectionFlag) {
                 if (videoFeedAuto.isChecked()) {
@@ -192,48 +472,37 @@ public class AutomaticControl extends AppCompatActivity {
                     videoStreamFlag = false;
                     detectionFlag = false;
                     videoFeedAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
+                    FeedingVideoAuto.setImageDrawable(getDrawable(R.drawable.empty_img));
                 }
             } else {
                 Toast.makeText(AutomaticControl.this, "Drone disconnected", Toast.LENGTH_SHORT);
                 videoFeedAuto.setChecked(false);
                 detectionFlag = false;
                 videoFeedAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
+                FeedingVideoAuto.setImageDrawable(getDrawable(R.drawable.empty_img));
             }
         });
 
         // Button to connect to drone
         telloStateHandler = new Handler();
 
+        droneBatteryAuto = findViewById(R.id.droneBatteryAuto);
+        wifiConnectionAuto = findViewById(R.id.wifiConnectionAuto);
         connectToDrone = findViewById(R.id.connectToDroneAuto);
         connectToDrone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (connectionClickCounter % 2 == 1) {   // to enable switch like behavior to connect and disconnect from the drone
                     telloConnect("command");
-                    Toast.makeText(AutomaticControl.this, "Drone connected", Toast.LENGTH_SHORT).show();
                     connectionFlag = true;              // set the connection status to true
                 }
                 if (connectionClickCounter % 2 == 0) {
                     telloConnect("disconnect");
                     connectionFlag = false;
-                    Toast.makeText(AutomaticControl.this, "Drone disconnected", Toast.LENGTH_SHORT).show();
                 }
                 connectionClickCounter++;
             }
         });
-
-        // Testing the path of the drone by manual input on the screen --------------------------------This one you don't need to worry about--------------------------------------------------
-        testCommand = findViewById(R.id.testCommand);
-        submit = findViewById(R.id.submit);
-        submit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String command = testCommand.getText().toString();
-                telloConnect(command);
-                testCommand.setText("");
-            }
-        });
-
     }
 
     // Connects with tello drone
@@ -259,6 +528,29 @@ public class AutomaticControl extends AppCompatActivity {
                         udpSocket.receive(rpacket);             // receive the response packet from tello
                         String text = new String(message, 0, rpacket.getLength()); // convert the message to text
                         Log.d("Received text", text);       // display the text as log in Logcat
+
+                        // For auto-control thread
+//                        new Thread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                while (autoControlFlag){
+//                                    byte[] buf = new byte[0];
+//                                    try {
+//                                        buf = ("takeoff").getBytes("UTF-8");
+//                                        DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddr, 8889);
+//                                        udpSocket.send(packet);
+//
+//                                    }
+//                                    catch (UnsupportedEncodingException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                    catch (IOException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                            }
+//                        }).start();
+
                         new Thread(new Runnable() {             // create a new thread to stream tello state
                             @Override
                             public void run() {
@@ -293,18 +585,18 @@ public class AutomaticControl extends AppCompatActivity {
                                             @Override
                                             public void run() {
                                                 try {
-//                                                    droneBattery.setText("Battery: " + dec.get(10) + "%");
-//                                                        if (Integer.parseInt(dec.get(10)) <= 15){
-//                                                            jdroneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
-//                                                        }
-//                                                        else {
-//                                                            jdroneBattery.setBackgroundResource(R.drawable.rounded_corner_green); // else display batter percentage with green background
-//                                                        }
+                                                    droneBatteryAuto.setText("Battery: " + dec.get(10) + "%");
+                                                        if (Integer.parseInt(dec.get(10)) <= 15){
+                                                            droneBatteryAuto.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
+                                                        }
+                                                        else {
+                                                            droneBatteryAuto.setBackgroundResource(R.drawable.rounded_corner_green); // else display batter percentage with green background
+                                                        }
                                                     if (Integer.parseInt(dec.get(10)) != 0) {
-//                                                            wifiConnection.setBackgroundResource(R.drawable.connect_drone);     // if wifi is connected and is active then display with green background
-//                                                        wifiConnection.setText("Connection: connected");
+                                                            wifiConnectionAuto.setBackgroundResource(R.drawable.connect_drone);     // if wifi is connected and is active then display with green background
+                                                        wifiConnectionAuto.setText("Connection: connected");
                                                     } else {
-//                                                        wifiConnection.setText("Connection: disconnected");
+                                                        wifiConnectionAuto.setText("Connection: disconnected");
                                                     }
 
                                                     telloStateHandler.removeCallbacks(this);
@@ -502,6 +794,16 @@ public class AutomaticControl extends AppCompatActivity {
             }
         }
     }
+    // ==================================================================================================Auto-control Thread======================================================================
+//    public class autoControlThread implements Runnable{
+//        public void run(){
+//            while (true){
+//                try{
+//
+//                }
+//            }
+//        }
+//    }
 
     // ===================================================================================================Detection Handler===============================================================================================
     // ===========================================================================================================================================================================================================

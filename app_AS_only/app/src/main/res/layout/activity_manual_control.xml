@@ -25,16 +25,16 @@
 
     <com.example.dronez_beta.DetectionResult
         android:id="@+id/DetectionResultView"
-        android:layout_width="728dp"
-        android:layout_height="410dp"
+        android:layout_width="736dp"
+        android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="0dp"
+        android:layout_marginStart="-5dp"
         android:layout_marginTop="0dp"
-        android:layout_marginEnd="3dp"
-        android:layout_marginBottom="1dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp"
         android:elevation="12dp" />
 
     <TextView
@@ -167,7 +167,7 @@
         android:layout_marginBottom="20dp"
         app:JV_backgroundColor="#20000000"
         app:JV_borderWidth="4dp"
-        app:JV_buttonColor="#ffcc00"
+        app:JV_buttonColor="@color/darker_gray"
         app:JV_buttonSizeRatio="35%"
         app:JV_fixedCenter="false" />
 
@@ -181,7 +181,7 @@
         android:layout_marginBottom="19dp"
         app:JV_backgroundColor="#20000000"
         app:JV_borderWidth="4dp"
-        app:JV_buttonColor="#ffcc00"
+        app:JV_buttonColor="@color/darker_gray"
         app:JV_buttonSizeRatio="35%"
         app:JV_fixedCenter="false" />
 
@@ -195,10 +195,9 @@
         android:layout_marginStart="18dp"
         android:layout_marginTop="182dp"
         android:layout_marginBottom="179dp"
-        android:backgroundTint="#ffcc00"
+        android:backgroundTint="@color/darker_gray"
         android:elevation="10dp"
         android:gravity="center"
-        app:backgroundTint="#ffcc00"
         app:fabCustomSize="50dp"
         app:srcCompat="@drawable/connect_drone" />
 
@@ -212,10 +211,9 @@
         android:layout_marginTop="113dp"
         android:layout_marginEnd="28dp"
         android:layout_marginBottom="248dp"
-        android:backgroundTint="#ffcc00"
+        android:backgroundTint="@color/darker_gray"
         android:elevation="10dp"
         android:gravity="center"
-        app:backgroundTint="#ffcc00"
         app:fabCustomSize="50dp"
         app:srcCompat="@drawable/flight_takeoff" />
 
@@ -229,29 +227,11 @@
         android:layout_marginTop="173dp"
         android:layout_marginEnd="28dp"
         android:layout_marginBottom="188dp"
-        android:backgroundTint="#ffcc00"
+        android:backgroundTint="@color/darker_gray"
         android:elevation="10dp"
         android:gravity="center"
-        app:backgroundTint="#ffcc00"
         app:fabCustomSize="50dp"
         app:srcCompat="@drawable/flight_land" />
-
-    <ToggleButton
-        android:id="@+id/videocam"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="122dp"
-        android:layout_marginBottom="240dp"
-        android:backgroundTint="#ffcc00"
-        android:elevation="10dp"
-        android:gravity="center"
-        app:backgroundTint="#ffcc00"
-        app:fabCustomSize="50dp"
-        app:srcCompat="@drawable/videocam" />
 
 
     <Switch

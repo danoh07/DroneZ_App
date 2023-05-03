@@ -49,4 +49,8 @@ dependencies {
     implementation 'org.bytedeco.javacpp-presets:opencv:3.0.0-1.1:android-arm'
     implementation 'org.bytedeco.javacpp-presets:ffmpeg:2.8.1-1.1:android-arm'
 
+//    implementation 'nl.bravobit:android-ffmpeg:1.1.7'
+//    implementation 'org.greenrobot:eventbus:3.1.1'
+//    implementation 'de.mrmaffen:libvlc-android:2.1.12@aar'
+
 }
