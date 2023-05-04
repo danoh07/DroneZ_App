@@ -47,4 +47,4 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - For Android app, since the size of the app is big due to the object detection algorithm, it will not be able to build and install on the online emulator. Thus, actual physical phone is needed to run Android app
 
 ## How to use Android App
-<img src="https://user-images.githubusercontent.com/51523562/236315300-f4d8aee0-19da-409d-8003-8503412abecb.jpg" width="300" height="600>
+<img src="https://user-images.githubusercontent.com/51523562/236315300-f4d8aee0-19da-409d-8003-8503412abecb.jpg" width="300" height="600">
