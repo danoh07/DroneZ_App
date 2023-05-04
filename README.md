@@ -45,3 +45,6 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 ## Notice
 - video stream feature don't work on emulator devices because of connection issues between the device and the drone. If you want full functionalities please test on actual andriod devices
 - For Android app, since the size of the app is big due to the object detection algorithm, it will not be able to build and install on the online emulator. Thus, actual physical phone is needed to run Android app
+
+## How to use Android App
+![D61D0208-77EB-49DF-AC60-29B9EE9E1598](https://user-images.githubusercontent.com/51523562/236315300-f4d8aee0-19da-409d-8003-8503412abecb.jpg)
