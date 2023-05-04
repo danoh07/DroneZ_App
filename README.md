@@ -56,6 +56,7 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 ### Manual Control
 #### Default Manual Control Page
 <img src="https://user-images.githubusercontent.com/51523562/236319158-7928f2b7-b3b0-4caf-8238-3a0ae8159048.jpg" width="600" height="300">
+
 #### Manual Control page with Live Feeding View
 <img src="https://user-images.githubusercontent.com/51523562/236323642-8c142274-ecce-4d6c-8cc5-6b42d63f3eb0.jpg" width="600" height="300">
 
@@ -72,6 +73,7 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 ### Automatic Control
 #### Default Automatic Control Page
 <img src="https://user-images.githubusercontent.com/51523562/236326581-cd043e78-aad2-4652-b0c3-6df55231c383.jpg" width="600" height="300">
+
 #### Automatic Control page with Live Feeding View
 <img src="https://user-images.githubusercontent.com/51523562/236326610-ddb2bb4d-a448-48f8-9508-aad66dec1dae.jpg" width="600" height="300">
 
