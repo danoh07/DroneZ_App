@@ -1,4 +1,5 @@
-# DroneZ App for connecting the drone to the users Phone
+# DroneZ 
+## App for connecting the drone to the users Phone
 
 ## In this project, there are currently two applications:
 - #### Flutter application
