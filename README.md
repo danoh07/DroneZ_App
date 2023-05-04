@@ -87,6 +87,6 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - Take off the drone by clicking "TAKEOFF" button
 - Choose direction and amount of distance from the drop down boxes and click "GO" to submit distance command
 - Choose rotation and amount of angle from the drop down boxes and click "GO" to submit rotation command
-- Submitting the command will work for one direction or rotation at a time
+- Submitting the command will work for one direction or rotation at a time; indicated with white background when enabled, otherwise in gray
 - "GO" buttons will only submit the command when wither both direction and distance value or rotation and angle value are chosen
 - To make the drone to fly itself with pre-programmed path, click "AUTO" button
