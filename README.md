@@ -51,4 +51,36 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 <img src="https://user-images.githubusercontent.com/51523562/236315300-f4d8aee0-19da-409d-8003-8503412abecb.jpg" width="300" height="600">
 - When the app is opened, the default page is the control selection page
 - Select "Manual Control" to manually control the drone with joysticks
-- Select "Automatic Control" to automatically control the drone with queue or in pre-programmed path
+- Select "Automatic Control" to automatically control the drone with command or in pre-programmed path
+
+### Manual Control
+#### Default Manual Control Page
+<img src="https://user-images.githubusercontent.com/51523562/236319158-7928f2b7-b3b0-4caf-8238-3a0ae8159048.jpg" width="600" height="300">
+#### Manual Control page with Live Feeding View
+<img src="https://user-images.githubusercontent.com/51523562/236323642-8c142274-ecce-4d6c-8cc5-6b42d63f3eb0.jpg" width="600" height="300">
+##### Connecting to drone
+- Connect to the drone by clicking "wifi-figure" button
+- When the battery and connection status are in green, the drone is connected
+##### After connecting
+- Able to turn on the live feeding view by clicking "video view" switch
+- Take off the drone by clicking taking off button on the right
+- After taking off, able to control the drone with joysticks
+- Land the drone by clicking landing button under the take off button
+- When battery is lower than 15%, the battery status will turn in red
+
+### Automatic Control
+#### Default Automatic Control Page
+<img src="https://user-images.githubusercontent.com/51523562/236326581-cd043e78-aad2-4652-b0c3-6df55231c383.jpg" width="600" height="300">
+#### Automatic Control page with Live Feeding View
+<img src="https://user-images.githubusercontent.com/51523562/236326610-ddb2bb4d-a448-48f8-9508-aad66dec1dae.jpg" width="600" height="300">
+##### Connecting to drone
+- Connect to the drone by clicking "wifi-figure" button
+- When the battery and connection status are in green, the drone is connected
+##### After connecting
+- Able to turn on the live feeding view by clicking "video view" switch
+- Take off the drone by clicking "TAKEOFF" button
+- Choose direction and amount of distance from the drop down boxes and click "GO" to submit distance command
+- Choose rotation and amount of angle from the drop down boxes and click "GO" to submit rotation command
+- Submitting the command will work for one direction or rotation at a time
+- "GO" buttons will only submit the command when wither both direction and distance value or rotation and angle value are chosen
+- To make the drone to fly itself with pre-programmed path, click "AUTO" button
