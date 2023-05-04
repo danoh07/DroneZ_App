@@ -109,12 +109,6 @@ public class AutomaticControl extends AppCompatActivity {
     private ImageView FeedingVideoAuto;
     private Switch videoFeedAuto;
     private Button autoButton;
-    private int commandIndex = 0;
-    // This is the all the command lines we want to put in Async function calls of telloConnect() function. ----------------------------------------------------------------------
-    // The telloConnect function is the function that sends the command signal to the drone.
-//    private String[] commands = {"takeoff", "up 300", "cw 90", "forward 300", "ccw 90",
-//            "go 500 0 100 100", "ccw 90", "forward 500", "ccw 90", "go 500 0 -100 100", "ccw 90",
-//            " forward 200", "land"};
     private Boolean autoControlFlag = false;
     private int autoControlClickCounter = 1;
 
@@ -144,6 +138,7 @@ public class AutomaticControl extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,6 +157,7 @@ public class AutomaticControl extends AppCompatActivity {
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
+        // Takeoff Button
         takeoffAuto = findViewById(R.id.takeoffAuto);
         takeoffAuto.setOnClickListener(v -> {
             if (connectionFlag) {
@@ -171,6 +167,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
         });
 
+        // Landing Button
         landAuto = findViewById(R.id.landAuto);
         landAuto.setOnClickListener(v -> {
             if (connectionFlag){
@@ -179,6 +176,7 @@ public class AutomaticControl extends AppCompatActivity {
                 Toast.makeText(AutomaticControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
             }
         });
+
 
         //====================================================DropDownBoxes for direction==============================================
         //=============================================================================================================================
@@ -195,10 +193,12 @@ public class AutomaticControl extends AppCompatActivity {
                 String item = parent.getItemAtPosition(position).toString();
                 directionCommand = item;
 
-                if (directionCommand.equals("Direction") || direction_value_Command.equals("Value")) {
+                if (directionCommand.equals("Direction") || direction_value_Command.equals("Value")){
                     submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                    submitDirection.setEnabled(false);
                 }else{
                     submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                    submitDirection.setEnabled(true);
                 }
             }
 
@@ -207,6 +207,7 @@ public class AutomaticControl extends AppCompatActivity {
 
             }
         });
+
 
         //====================================================DropDownBoxes for direction value==============================================
         //=============================================================================================================================
@@ -221,10 +222,12 @@ public class AutomaticControl extends AppCompatActivity {
                 String item = parent.getItemAtPosition(position).toString();
                 direction_value_Command = item;
 
-                if (directionCommand.equals("Direction") || direction_value_Command.equals("Value")) {
+                if (directionCommand.equals("Direction") || direction_value_Command.equals("Value")){
                     submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                    submitDirection.setEnabled(false);
                 }else{
                     submitDirection.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                    submitDirection.setEnabled(true);
                 }
             }
 
@@ -233,6 +236,7 @@ public class AutomaticControl extends AppCompatActivity {
 
             }
         });
+
 
         //====================================================Submitting Drop Down values==============================================
         //=============================================================================================================================
@@ -252,6 +256,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
         });
 
+
         //====================================================DropDownBoxes for rotation==============================================
         //=============================================================================================================================
         rotation_menu = findViewById(R.id.rotation_dropdown);
@@ -269,8 +274,10 @@ public class AutomaticControl extends AppCompatActivity {
 
                 if (rotationCommand.equals("Rotation") || angleCommand.equals("Value")) {
                     submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                    submitRotation.setEnabled(false);
                 }else{
                     submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                    submitRotation.setEnabled(true);
                 }
             }
 
@@ -279,6 +286,7 @@ public class AutomaticControl extends AppCompatActivity {
 
             }
         });
+
 
         //====================================================DropDownBoxes for rotation value==============================================
         //=============================================================================================================================
@@ -295,8 +303,10 @@ public class AutomaticControl extends AppCompatActivity {
 
                 if (rotationCommand.equals("Rotation") || angleCommand.equals("Value")) {
                     submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.gray));
+                    submitRotation.setEnabled(false);
                 }else{
                     submitRotation.setBackgroundTintList(ContextCompat.getColorStateList(AutomaticControl.this, R.color.white));
+                    submitRotation.setEnabled(true);
                 }
             }
 
@@ -305,6 +315,7 @@ public class AutomaticControl extends AppCompatActivity {
 
             }
         });
+
 
         //====================================================Submitting Drop Down values==============================================
         //=============================================================================================================================
@@ -326,7 +337,6 @@ public class AutomaticControl extends AppCompatActivity {
 
 
         // Go button that will start the auto-pilot flight of the drone
-//        CountDownLatch latch = new CountDownLatch(1);
         autoButton = findViewById(R.id.autoButton);
         autoButton.setOnClickListener(v -> {
 
@@ -437,7 +447,6 @@ public class AutomaticControl extends AppCompatActivity {
                 }
             }
 
-
             if (autoControlFlag) {
                 telloConnect("land");
                 autoControlFlag = false;
@@ -445,7 +454,8 @@ public class AutomaticControl extends AppCompatActivity {
 
         });
 
-        // Feeding the view and display on the screen
+
+        // Feeding the view and display on the screen, invoke object detection
         FeedingVideoAuto = findViewById(R.id.FeedingViewAuto);
         jResults = findViewById(R.id.DetectionResultViewAuto); // this is a custom view that will display the object detection results (bounding boxes) on top of video Feed
         videoFeedAuto = findViewById(R.id.videoFeedAuto);
@@ -483,9 +493,9 @@ public class AutomaticControl extends AppCompatActivity {
             }
         });
 
+
         // Button to connect to drone
         telloStateHandler = new Handler();
-
         droneBatteryAuto = findViewById(R.id.droneBatteryAuto);
         wifiConnectionAuto = findViewById(R.id.wifiConnectionAuto);
         connectToDrone = findViewById(R.id.connectToDroneAuto);
@@ -504,6 +514,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
         });
     }
+
 
     // Connects with tello drone
     public void telloConnect(final String strCommand) {
@@ -529,28 +540,6 @@ public class AutomaticControl extends AppCompatActivity {
                         String text = new String(message, 0, rpacket.getLength()); // convert the message to text
                         Log.d("Received text", text);       // display the text as log in Logcat
 
-                        // For auto-control thread
-//                        new Thread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                while (autoControlFlag){
-//                                    byte[] buf = new byte[0];
-//                                    try {
-//                                        buf = ("takeoff").getBytes("UTF-8");
-//                                        DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddr, 8889);
-//                                        udpSocket.send(packet);
-//
-//                                    }
-//                                    catch (UnsupportedEncodingException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                    catch (IOException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }
-//                        }).start();
-
                         new Thread(new Runnable() {             // create a new thread to stream tello state
                             @Override
                             public void run() {
@@ -558,9 +547,6 @@ public class AutomaticControl extends AppCompatActivity {
                                     sleep(100);            // I chose 2000 as the delay ------------------This is where delay of the command receiving on drone side is occurring. We can't put it too short as we need to give a drone time for actual flight------------------------------------------------------------------------------------------------
                                     byte[] buf = new byte[0];
                                     try {
-//                                        if (autoButtonClicked == true){
-//
-//                                        }
                                         buf = ("battery?").getBytes("UTF-8");
                                         DatagramPacket packet = new DatagramPacket(buf, buf.length, serverAddr, 8889);
                                         udpSocket.send(packet);
@@ -630,6 +616,7 @@ public class AutomaticControl extends AppCompatActivity {
         }).start();
     }
 
+
     // retrieve the video from tello drone and decode it to display on the UI
     public void videoHandler(final String strCommand, final BlockingQueue frameV) throws IOException { // add this for surfaceView : , Surface surface
         telloConnect(strCommand);
@@ -672,7 +659,6 @@ public class AutomaticControl extends AppCompatActivity {
                         socketVideo.setReuseAddress(true);                  // reusing the address
                         socketVideo.setBroadcast(true);
                         socketVideo.bind(new InetSocketAddress(11111)); // based on tell SDK 1.3, the port for receiving the video frames is 11111
-
 
                         byte[] videoBuf = new byte[2048];                   // create an empty byte buffer of size 2018
                         DatagramPacket videoPacket = new DatagramPacket(videoBuf, videoBuf.length); // create a datagram packet
@@ -767,6 +753,7 @@ public class AutomaticControl extends AppCompatActivity {
         return BitmapFactory.decodeByteArray(imgBytes, 0 , imgBytes.length);
     }
 
+
     public class displayBitmap implements Runnable{
 
         protected BlockingQueue displayQueue;       // create a blocking queue to get the data from queue
@@ -795,16 +782,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
         }
     }
-    // ==================================================================================================Auto-control Thread======================================================================
-//    public class autoControlThread implements Runnable{
-//        public void run(){
-//            while (true){
-//                try{
-//
-//                }
-//            }
-//        }
-//    }
+
 
     // ===================================================================================================Detection Handler===============================================================================================
     // ===========================================================================================================================================================================================================
@@ -843,6 +821,7 @@ public class AutomaticControl extends AppCompatActivity {
             jResults = results;
         }
     }
+
 
     // ===================================================================================================Detection Analyze===============================================================================================
     // ===========================================================================================================================================================================================================
