@@ -17,7 +17,6 @@ In the future we plan to implement more features from the Andriod Stuido applact
 - Manaual Controls for the Tello drone
 - Automatic Controls for the Tello drone where users can excute pre-programmed paths
 - Display video stream and preform YOLO object dectection algorithm 
-- Record videos from Tello video stream
 
 ## Getting Started
 - To deploy the application on your machine, you will need to install Dart, Flutter, and Android Studio 
