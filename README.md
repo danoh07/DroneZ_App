@@ -15,7 +15,7 @@ In the future we plan to implement more features from the Andriod Stuido applact
 ## Andriod Studio App Features:
 - Connect to Tello drone
 - Manaual Controls for the Tello drone
-- Automatic Controls for the Tello drone where users can excute pre-programmed paths
+- Automatic Controls for the Tello drone where users can excute pre-programmed path
 - Display video stream and preform YOLO object dectection algorithm 
 
 ## Getting Started
@@ -47,4 +47,8 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - For Android app, since the size of the app is big due to the object detection algorithm, it will not be able to build and install on the online emulator. Thus, actual physical phone is needed to run Android app
 
 ## How to use Android App
+### Default page
 <img src="https://user-images.githubusercontent.com/51523562/236315300-f4d8aee0-19da-409d-8003-8503412abecb.jpg" width="300" height="600">
+- When the app is opened, the default page is the control selection page
+- Select "Manual Control" to manually control the drone with joysticks
+- Select "Automatic Control" to automatically control the drone with queue or in pre-programmed path
