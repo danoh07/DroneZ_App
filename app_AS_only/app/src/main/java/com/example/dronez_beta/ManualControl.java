@@ -341,18 +341,26 @@ public class ManualControl extends AppCompatActivity{
                                             @Override
                                             public void run() {
                                                 try {
-                                                    droneBattery.setText("Battery: " + dec.get(10) + "%");
-                                                    if (Integer.parseInt(dec.get(10)) <= 15) {
-                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
-                                                    } else {
-                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_green);
+                                                    if (connectionFlag) {
+                                                        droneBattery.setText("Battery: " + dec.get(10) + "%");
+                                                        if (Integer.parseInt(dec.get(10)) <= 15) {
+                                                            droneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
+                                                        } else {
+                                                            droneBattery.setBackgroundResource(R.drawable.rounded_corner_green);
+                                                        }
+                                                        if (Integer.parseInt(dec.get(10)) != 0) {
+                                                            wifiConnection.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
+                                                            wifiConnection.setText("Connection: connected");
+                                                        } else {
+                                                            wifiConnection.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                            wifiConnection.setText("Connection: disconnected");
+                                                        }
                                                     }
-                                                    if (Integer.parseInt(dec.get(10)) != 0) {
-                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
-                                                        wifiConnection.setText("Connection: connected");
-                                                    } else {
-                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_red);
-                                                        wifiConnection.setText("Connection: disconnected");
+                                                    else{
+                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                        droneBattery.setText("na");
+                                                        wifiConnection.setText("Disconnected");
                                                     }
 
                                                     telloStateHandler.removeCallbacks(this);

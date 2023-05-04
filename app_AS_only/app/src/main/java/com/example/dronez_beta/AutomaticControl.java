@@ -348,8 +348,52 @@ public class AutomaticControl extends AppCompatActivity {
                 }
             }
 
+            if(autoControlFlag) {
+                telloConnect("go 300 0 150 20");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
             if (autoControlFlag) {
-                telloConnect("up 250");
+                telloConnect("cw 90");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("forward 100");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("cw 90");
+                autoControlFlag = false;
+            }
+            start = System.currentTimeMillis();
+            while(!autoControlFlag){
+                if (System.currentTimeMillis()-start== 10000) {
+                    autoControlFlag = true;
+                }
+            }
+
+            if (autoControlFlag) {
+                telloConnect("flip f");
                 autoControlFlag = false;
             }
             start = System.currentTimeMillis();
@@ -360,7 +404,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
 
             if(autoControlFlag) {
-                telloConnect("forward 500");
+                telloConnect("forward 300");
                 autoControlFlag = false;
             }
             start = System.currentTimeMillis();
@@ -382,29 +426,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
 
             if (autoControlFlag) {
-                telloConnect("forward 200");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("cw 90");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if(autoControlFlag) {
-                telloConnect("forward 500");
+                telloConnect("forward 100");
                 autoControlFlag = false;
             }
             start = System.currentTimeMillis();
@@ -426,18 +448,7 @@ public class AutomaticControl extends AppCompatActivity {
             }
 
             if (autoControlFlag) {
-                telloConnect("forward 200");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("cw 90");
+                telloConnect("flip r");
                 autoControlFlag = false;
             }
             start = System.currentTimeMillis();
@@ -515,7 +526,6 @@ public class AutomaticControl extends AppCompatActivity {
         });
     }
 
-
     // Connects with tello drone
     public void telloConnect(final String strCommand) {
         new Thread(new Runnable() { // create a new runnable thread to handle tello state
@@ -571,19 +581,25 @@ public class AutomaticControl extends AppCompatActivity {
                                             @Override
                                             public void run() {
                                                 try {
-                                                    droneBatteryAuto.setText("Battery: " + dec.get(10) + "%");
-                                                        if (Integer.parseInt(dec.get(10)) <= 15){
+                                                    if (connectionFlag) {
+                                                        droneBatteryAuto.setText("Battery: " + dec.get(10) + "%");
+                                                        if (Integer.parseInt(dec.get(10)) <= 15) {
                                                             droneBatteryAuto.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
-                                                        }
-                                                        else {
+                                                        } else {
                                                             droneBatteryAuto.setBackgroundResource(R.drawable.rounded_corner_green); // else display batter percentage with green background
                                                         }
-                                                    if (Integer.parseInt(dec.get(10)) != 0) {
-                                                        wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
-                                                        wifiConnectionAuto.setText("Connection: connected");
-                                                    } else {
-                                                        wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_red);
-                                                        wifiConnectionAuto.setText("Connection: disconnected");
+                                                        if (Integer.parseInt(dec.get(10)) != 0) {
+                                                            wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
+                                                            wifiConnectionAuto.setText("Connection: connected");
+                                                        } else {
+                                                            wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                            wifiConnectionAuto.setText("Connection: disconnected");
+                                                        }
+                                                    }else{
+                                                        droneBatteryAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                        wifiConnectionAuto.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                        droneBatteryAuto.setText("na");
+                                                        wifiConnectionAuto.setText("Disconnected");
                                                     }
 
                                                     telloStateHandler.removeCallbacks(this);
