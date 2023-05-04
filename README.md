@@ -65,6 +65,7 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - When the battery and connection status are in green, the drone is connected
 #### After connecting
 - Able to turn on the live feeding view by clicking "video view" switch
+- If the video view is on, the switch will turn in green
 - Take off the drone by clicking taking off button on the right
 - After taking off, able to control the drone with joysticks
 - Land the drone by clicking landing button under the take off button
@@ -82,6 +83,7 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - When the battery and connection status are in green, the drone is connected
 #### After connecting
 - Able to turn on the live feeding view by clicking "video view" switch
+- If the video view is on, the switch will turn in green
 - Take off the drone by clicking "TAKEOFF" button
 - Choose direction and amount of distance from the drop down boxes and click "GO" to submit distance command
 - Choose rotation and amount of angle from the drop down boxes and click "GO" to submit rotation command
