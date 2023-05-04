@@ -19,8 +19,8 @@ In the future we plan to implement more features from the Andriod Stuido applact
 - Display video stream and preform YOLO object dectection algorithm 
 
 ## Getting Started
-- To deploy the application on your machine, you will need to install Dart, Flutter, and Android Studio 
-- For now, Tello Drone is only thing that works with the app 
+- To deploy the application on your machine, you will need to install Dart and Flutter for the Flutter app, and Android Studio for Android app 
+- To connect to the drone, Tello drone is neeeded
 
 ### Prerequisites
 * Tello Drone (Model:TLW004) (if you want to fly it)
@@ -43,4 +43,5 @@ flutter run
 Open android studio > navigate to cloned directory and open app_AS_only > Build > run app (preferably connecting your phone)
 
 ## Notice
-- video stream feature don't work on emulator devices because of connection issues between the device and the drone. If you want full functionalities please test on actual andriod devices. 
+- video stream feature don't work on emulator devices because of connection issues between the device and the drone. If you want full functionalities please test on actual andriod devices
+- For Android app, since the size of the app is big due to the object detection algorithm, it will not be able to build and install on the online emulator. Thus, actual physical phone is needed to run Android app
