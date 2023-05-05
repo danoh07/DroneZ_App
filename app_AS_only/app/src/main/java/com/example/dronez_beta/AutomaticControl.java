@@ -138,6 +138,11 @@ public class AutomaticControl extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        connectionClickCounter = 1;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
