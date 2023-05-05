@@ -3,6 +3,7 @@
 ## In this project, there are currently two applications:
 - #### Flutter application
 - #### Andriod Stuido application 
+- #### Facial detection and tracking
 
 In the future we plan to implement more features from the Andriod Stuido applaction to the Flutter application for cross platform support. 
 
@@ -45,6 +46,11 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 ## Notice
 - video stream feature don't work on emulator devices because of connection issues between the device and the drone. If you want full functionalities please test on actual andriod devices
 - For Android app, since the size of the app is big due to the object detection algorithm, it will not be able to build and install on the online emulator. Thus, actual physical phone is needed to run Android app
+
+#### Connecting to drone and Running Algorithm
+- Connect to the drone by clicking "wifi-figure" button
+- When the battery and connection status are in green, the drone is connected
+- Then navigate to the face_tracking.py and run the file using any suitable IDE (i.e. VS Code)
 
 ## How to use Android App
 ### Default page
@@ -93,3 +99,17 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - To make the drone to fly itself with pre-programmed path, click "AUTO" button
 
 <video src="https://user-images.githubusercontent.com/51523562/236355816-ccee27ff-dd8d-4061-a47c-e6f72a69f81f.mp4"></video>
+
+## Facial Detection and Tracking 
+
+#### Installing Packages 
+- On terminal, make sure you have the OpenCV and DJI Tello packages installed 
+```
+pip install djitellopy
+```
+- Navigate to the object_tracking/tello folder and ensure all the files are properly installed
+- Make sure to turn on the drone and connect computer to drone wifi
+- Run "face_tracking.py"
+
+## Notice
+Before running "face_tracking.py", please place the drone away from obstacles and people. The drone will take off automatically and start detecting and tracking the closest face it detects as soon as the python file starts running.
