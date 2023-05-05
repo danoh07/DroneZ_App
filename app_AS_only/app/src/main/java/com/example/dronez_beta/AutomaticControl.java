@@ -340,128 +340,134 @@ public class AutomaticControl extends AppCompatActivity {
         autoButton = findViewById(R.id.autoButton);
         autoButton.setOnClickListener(v -> {
 
-            telloConnect("takeoff");
-            long start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
+            if (connectionFlag) {
+
+                telloConnect("takeoff");
+                long start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 7000) {
+                        autoControlFlag = true;
+                    }
                 }
+
+                if (autoControlFlag) {
+                    telloConnect("up 170");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 7000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("forward 150");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 7000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("cw 90");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 6000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("forward 100");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 7000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("cw 90");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 6000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("forward 150");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 7000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("cw 90");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 6000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("forward 100");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 7000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("cw 90");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 6000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("flip r");
+                    autoControlFlag = false;
+                }
+                start = System.currentTimeMillis();
+                while (!autoControlFlag) {
+                    if (System.currentTimeMillis() - start == 6000) {
+                        autoControlFlag = true;
+                    }
+                }
+
+                if (autoControlFlag) {
+                    telloConnect("land");
+                    autoControlFlag = false;
+                }
+            }else{
+                Toast.makeText(AutomaticControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
             }
 
-            if(autoControlFlag) {
-                telloConnect("go 300 0 150 20");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("cw 90");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("forward 100");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("cw 90");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("flip f");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if(autoControlFlag) {
-                telloConnect("forward 300");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("cw 90");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("forward 100");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("cw 90");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("flip r");
-                autoControlFlag = false;
-            }
-            start = System.currentTimeMillis();
-            while(!autoControlFlag){
-                if (System.currentTimeMillis()-start== 10000) {
-                    autoControlFlag = true;
-                }
-            }
-
-            if (autoControlFlag) {
-                telloConnect("land");
-                autoControlFlag = false;
-            }
 
         });
 
