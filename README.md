@@ -100,7 +100,7 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 
 <video src="https://user-images.githubusercontent.com/51523562/236355816-ccee27ff-dd8d-4061-a47c-e6f72a69f81f.mp4"></video>
 
-### Facial Detection and Tracking 
+## Facial Detection and Tracking 
 
 #### Installing Packages 
 - On terminal, make sure you have the OpenCV and DJI Tello packages installed 
