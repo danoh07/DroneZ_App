@@ -7,51 +7,153 @@
     android:orientation="horizontal"
     tools:context=".AutomaticControl">
 
-    <EditText
-        android:id="@+id/testCommand"
-        android:layout_width="304dp"
-        android:layout_height="55dp"
-        android:ems="10"
-        android:hint="test command"
-        android:inputType="textPersonName"
+    <Spinner
+        android:id="@+id/direction_dropdown"
+        android:layout_width="140dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="12dp"
+        android:autofillHints="Choose direction"
+        android:background="@android:drawable/btn_dropdown"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
-        app:layout_constraintHorizontal_bias="0.272"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.82" />
+        app:layout_constraintVertical_bias="0.405">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/connectToDroneAuto"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#ffcc00"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
-        app:layout_constraintHorizontal_bias="0.011"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.667"
-        app:srcCompat="@drawable/connect_drone"></com.google.android.material.floatingactionbutton.FloatingActionButton>
+    </Spinner>
 
-    <Button
-        android:id="@+id/submit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:backgroundTint="#ffcc00"
-        android:text="Submit"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/takeoffAuto"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="320dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="76dp"
+        android:layout_marginBottom="12dp"
+        android:text="Takeoff"
+        android:textColor="@color/black"
+        app:cornerRadius="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/direction_dropdown"
         app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
-        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.955" />
+        app:layout_constraintVertical_bias="1.0"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/submitRotation"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="60dp"
+        android:layout_height="47dp"
+        android:layout_marginTop="7dp"
+        android:text="GO"
+        android:textColor="@color/black"
+        app:cornerRadius="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/rotation_value_dropdown"
+        app:layout_constraintTop_toBottomOf="@+id/submitDirection"
+        app:layout_constraintVertical_bias="0.0"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp">
+
+    </com.google.android.material.button.MaterialButton>
+
+    <Spinner
+        android:id="@+id/rotation_value_dropdown"
+        android:layout_width="120dp"
+        android:layout_height="41dp"
+        android:layout_marginTop="12dp"
+        android:background="@android:drawable/btn_dropdown"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/rotation_dropdown"
+        app:layout_constraintTop_toBottomOf="@+id/direction_value"
+        app:layout_constraintVertical_bias="0.0">
+
+    </Spinner>
+
+    <Spinner
+        android:id="@+id/direction_value"
+        android:layout_width="120dp"
+        android:layout_height="41dp"
+
+        android:background="@android:drawable/btn_dropdown"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/direction_dropdown"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.405">
+
+    </Spinner>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/submitDirection"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="60dp"
+        android:layout_height="47dp"
+        android:layout_marginTop="7dp"
+        android:text="GO"
+        android:textColor="@color/black"
+        app:cornerRadius="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/direction_value"
+        app:layout_constraintTop_toBottomOf="@+id/takeoffAuto"
+        app:layout_constraintVertical_bias="0.0"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp">
+
+    </com.google.android.material.button.MaterialButton>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/landAuto"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="320dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:text="Land"
+        android:textColor="@color/black"
+        app:cornerRadius="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/DetectionResultViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rotation_dropdown"
+        app:layout_constraintVertical_bias="0.0"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp">
+
+    </com.google.android.material.button.MaterialButton>
+
+    <Spinner
+        android:id="@+id/rotation_dropdown"
+        android:layout_width="140dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:background="@android:drawable/btn_dropdown"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/direction_dropdown"
+        app:layout_constraintVertical_bias="0.0">
+
+    </Spinner>
 
     <ImageView
         android:id="@+id/FeedingViewAuto"
-        android:layout_width="416dp"
-        android:layout_height="412dp"
-        android:backgroundTint="#ffcc00"
+        android:layout_width="384dp"
+        android:layout_height="411dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -61,8 +163,8 @@
 
     <com.example.dronez_beta.DetectionResult
         android:id="@+id/DetectionResultViewAuto"
-        android:layout_width="416dp"
-        android:layout_height="410dp"
+        android:layout_width="385dp"
+        android:layout_height="411dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -70,28 +172,78 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:id="@+id/autoButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="#ffcc00"
-        android:text="Go"
+        android:text="Auto"
+        android:textColor="@color/black"
+        app:cornerRadius="2dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
-        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintHorizontal_bias="0.922"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.192" />
+        app:layout_constraintVertical_bias="0.016"
+        app:strokeColor="@color/black"
+        app:strokeWidth="2dp"/>
 
     <Switch
         android:id="@+id/videoFeedAuto"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="116dp"
+        android:layout_marginBottom="16dp"
         android:text="View Video"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
-        app:layout_constraintHorizontal_bias="0.959"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.317"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/landAuto"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/connectToDroneAuto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/darker_gray"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.058"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.952"
+        app:srcCompat="@drawable/connect_drone">
+
+    </com.google.android.material.floatingactionbutton.FloatingActionButton>
+
+    <TextView
+        android:id="@+id/wifiConnectionAuto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="Connection: Disconnected"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.089" />
+
+    <TextView
+        android:id="@+id/droneBatteryAuto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:text="Battery: na"
+        android:textColor="@color/black"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/FeedingViewAuto"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.04" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

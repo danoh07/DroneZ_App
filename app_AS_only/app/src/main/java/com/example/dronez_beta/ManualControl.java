@@ -1,26 +1,15 @@
 package com.example.dronez_beta;
 
-import static android.app.UiModeManager.MODE_NIGHT_NO;
-import static android.app.UiModeManager.MODE_NIGHT_YES;
-import static android.content.ContentValues.TAG;
 import static android.os.SystemClock.sleep;
-import static org.bytedeco.opencv.global.opencv_core.finish;
 import static java.lang.Thread.interrupted;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.WorkerThread;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.res.ResourcesCompat;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -28,22 +17,18 @@ import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
-import android.hardware.display.DisplayManager;
+import android.graphics.drawable.Drawable;
 import android.hardware.display.VirtualDisplay;
 import android.media.Image;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaRecorder;
-import android.media.MediaScannerConnection;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -58,13 +43,11 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -77,16 +60,11 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -96,9 +74,13 @@ import org.pytorch.Module;
 import org.pytorch.Tensor;
 import org.pytorch.torchvision.TensorImageUtils;
 
+//import nl.bravobit.ffmpeg.ExecuteBinaryResponseHandler;
+//import nl.bravobit.ffmpeg.FFmpeg;
+//import nl.bravobit.ffmpeg.FFtask;
+
 import io.github.controlwear.virtual.joystick.android.JoystickView;
 
-public class ManualControl extends AppCompatActivity {
+public class ManualControl extends AppCompatActivity{
 
     private static final int[] RC = {0, 0, 0, 0};  // Integer array to store the strength from the joystick
     Pattern statePattern = Pattern.compile("-*\\d{0,3}\\.?\\d{0,2}[^\\D\\W\\s]");  // a regex pattern to read the tello state
@@ -120,29 +102,14 @@ public class ManualControl extends AppCompatActivity {
     private boolean videoStreamFlag = false;   // Tracking the video feeding status
     long startMs;                       // variable to calculate the time difference for video codec
     private MediaCodec m_codec;         // MediaCodec is used to decode the incoming H.264 stream from tello drone
-
-    private ToggleButton videocam;
-    private int videoRecordCounter = 1;
-    private boolean isRecording = false;
-
-    private static final String TAG = "ManualControl";
-    private static final int REQUEST_CODE = 100;
-    private int mScreenDensity;
-    private MediaProjectionManager mProjectionManager;
-    private static final int DISPLAY_WIDTH = 720;
-    private static final int DISPLAY_HEIGHT = 1280;
-    private MediaProjection mMediaProjection;
-    private VirtualDisplay mVirtualDisplay;
-    private MediaProjectionCallback mMediaProjectionCallback;
-    private MediaRecorder mMediaRecorder;
-    private static final int REQUEST_PERMISSIONS = 10;
+    private ImageView bitView;
 
     // Detection
     private boolean detectionFlag;      // Tracking if the user wants to do object detection
-    private FloatingActionButton DroneObjectDetection;
     private Module jMod = null;
     private DetectionResult jResults;
     private float rtThreshold = 0.60f;
+
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
         File file = new File(context.getFilesDir(), assetName);
@@ -163,6 +130,7 @@ public class ManualControl extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -180,34 +148,16 @@ public class ManualControl extends AppCompatActivity {
             getWindow().setStatusBarColor(Color.parseColor("#000000"));
         }
 
-        // ===================================================================================================Recording===============================================================================================
-        // ===========================================================================================================================================================================================================
-        // Saving the video feed into album
-        videocam = findViewById(R.id.videocam);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        mScreenDensity = metrics.densityDpi;
-
-        mMediaRecorder = new MediaRecorder();
-
-        mProjectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-
-        videocam.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (ContextCompat.checkSelfPermission(ManualControl.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) + ContextCompat
-                        .checkSelfPermission(ManualControl.this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    onToggleScreenShare(v);
-                }
-            }
-        });
 
         // ===================================================================================================Video Feeding & Detection===============================================================================================
         // ===========================================================================================================================================================================================================
         FeedingView = findViewById(R.id.bitView);
         jResults = findViewById(R.id.DetectionResultView); // this is a custom view that will display the object detection results (bounding boxes) on top of video Feed
         videoFeeding = findViewById(R.id.videoFeed);
+        bitView = findViewById(R.id.bitView);
+        bitView.setImageDrawable(getDrawable(R.drawable.empty_img));
         videoFeeding.setOnClickListener(view -> {
             if (connectionFlag) {
                 if (videoFeeding.isChecked()) {
@@ -230,6 +180,7 @@ public class ManualControl extends AppCompatActivity {
                     videoStreamFlag = false;
                     detectionFlag = false;
                     videoFeeding.setBackgroundResource(R.drawable.rounded_corner_trans);
+                    bitView.setImageDrawable(getDrawable(R.drawable.empty_img));
 
                 }
             } else {
@@ -237,11 +188,13 @@ public class ManualControl extends AppCompatActivity {
                 videoFeeding.setChecked(false);
                 detectionFlag = false;
                 videoFeeding.setBackgroundResource(R.drawable.rounded_corner_trans);
+                bitView.setImageDrawable(getDrawable(R.drawable.empty_img));
+
             }
         });
 
-        // ===================================================================================================Connection===============================================================================================
-        // ===========================================================================================================================================================================================================
+        // ========================================================Connection===============================================================================================
+        // ========================================================================================================================================================================
         telloStateHandler = new Handler();
 
         droneBattery = findViewById(R.id.droneBattery);
@@ -253,25 +206,25 @@ public class ManualControl extends AppCompatActivity {
             public void onClick(View v) {
                 if (connectionClickCounter % 2 == 1) {   // to enable switch like behavior to connect and disconnect from the drone
                     telloConnect("command");
-                    Toast.makeText(ManualControl.this, "Drone connected", Toast.LENGTH_SHORT).show();
                     connectionFlag = true;              // set the connection status to true
                 }
                 if (connectionClickCounter % 2 == 0) {
                     telloConnect("disconnect");
                     connectionFlag = false;
-                    Toast.makeText(ManualControl.this, "Drone disconnected", Toast.LENGTH_SHORT).show();
                 }
                 connectionClickCounter++;
             }
         });
 
-        // ===================================================================================================Commands===============================================================================================
-        // ===========================================================================================================================================================================================================
+        // =================================================Commands===============================================================================================
+        // ===========================================================================================================================================================
         // Click takeoff button to send "takeoff" command to drone
         takeoff = findViewById(R.id.takeoff);
         takeoff.setOnClickListener(v -> {
             if (connectionFlag) {
                 telloConnect("takeoff");
+            }else{
+                Toast.makeText(ManualControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -280,11 +233,13 @@ public class ManualControl extends AppCompatActivity {
         land.setOnClickListener(v -> {
             if (connectionFlag) {
                 telloConnect("land");
+            }else{
+                Toast.makeText(ManualControl.this, "Please connect to drone first", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // ===================================================================================================Joysticks===============================================================================================
-        // ===========================================================================================================================================================================================================
+        // ===========================================Joysticks===============================================================================================
+        // ===========================================================================================================================================
         leftjoystick = findViewById(R.id.joystickViewLeft); // left joystick where the angle is the movement angle and strength is the extend to which you push the joystick
         leftjoystick.setOnMoveListener((angle, strength) -> {
 
@@ -330,8 +285,8 @@ public class ManualControl extends AppCompatActivity {
         });
     }
 
-    // ===================================================================================================Connection Handler===============================================================================================
-    // ===========================================================================================================================================================================================================
+    // ============================================Connection Handler===============================================================================================
+    // ===========================================================================================================================================================
     // Connects with tello drone
     public void telloConnect(final String strCommand) {
         new Thread(new Runnable() { // create a new runnable thread to handle tello state
@@ -386,18 +341,26 @@ public class ManualControl extends AppCompatActivity {
                                             @Override
                                             public void run() {
                                                 try {
-                                                    droneBattery.setText("Battery: " + dec.get(10) + "%");
-                                                    if (Integer.parseInt(dec.get(10)) <= 15) {
-                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
-                                                    } else {
-                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_green);
+                                                    if (connectionFlag) {
+                                                        droneBattery.setText("Battery: " + dec.get(10) + "%");
+                                                        if (Integer.parseInt(dec.get(10)) <= 15) {
+                                                            droneBattery.setBackgroundResource(R.drawable.rounded_corner_red); // if battery percentage is below 15 set the background of text to red
+                                                        } else {
+                                                            droneBattery.setBackgroundResource(R.drawable.rounded_corner_green);
+                                                        }
+                                                        if (Integer.parseInt(dec.get(10)) != 0) {
+                                                            wifiConnection.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
+                                                            wifiConnection.setText("Connection: connected");
+                                                        } else {
+                                                            wifiConnection.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                            wifiConnection.setText("Connection: disconnected");
+                                                        }
                                                     }
-                                                    if (Integer.parseInt(dec.get(10)) != 0) {
-                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_green);     // if wifi is connected and is active then display with green background
-                                                        wifiConnection.setText("Connection: connected");
-                                                    } else {
-                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_red);
-                                                        wifiConnection.setText("Connection: disconnected");
+                                                    else{
+                                                        droneBattery.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                        wifiConnection.setBackgroundResource(R.drawable.rounded_corner_trans);
+                                                        droneBattery.setText("na");
+                                                        wifiConnection.setText("Disconnected");
                                                     }
 
                                                     telloStateHandler.removeCallbacks(this);
@@ -430,8 +393,8 @@ public class ManualControl extends AppCompatActivity {
         }).start();
     }
 
-    // ===================================================================================================Video Feeding Handler===============================================================================================
-    // ===========================================================================================================================================================================================================
+    // ====================================Video Feeding Handler===============================================================================================
+    // =================================================================================================================================
     // --------------------------This is where the video handler is to start collecting YUVV Frames from drone in the queue and trying to convert it to Bitmap Frames-----------------------------------------------
     // retrieve the video from tello drone and decode it to display on the UI
     public void videoHandler(final String strCommand, final BlockingQueue frameV) throws IOException { // add this for surfaceView : , Surface surface
@@ -511,13 +474,10 @@ public class ManualControl extends AppCompatActivity {
                                 int outputIndex = m_codec.dequeueOutputBuffer(info, 100); // set it back to 0 if there is error associate with this change in value
 
                                 if (outputIndex >= 0) {
-
                                     try {
-                                        // ------------------------------------------------Basically, before converting the YUV to Image format below, we need to store the data if recording started ------------------------------------------------------
-                                        Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format ---------------------------Storing the YUV decoded frame into Image format-----------------------------
+                                        Image image = m_codec.getOutputImage(outputIndex); // store the decoded (decoded by Mediacodec) data to Image format-Storing the YUV decoded frame into Image format-----------------------------
+                                        Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format-Converting from Image to Bitmap format
 
-                                        //-------------------------------------------------Or we can try to convert Image Frame back to YUV before the below line starts, which I feel is redundant though if we can store it before----------------------------
-                                        Bitmap BM = imgToBM(image);                        // convert from image format to BitMap format -----------------------------------------------Converting from Image to Bitmap format
                                         try {
                                             if (!queue.isEmpty()) {
                                                 queue.clear();
@@ -550,9 +510,9 @@ public class ManualControl extends AppCompatActivity {
 
     }
 
-    // ===================================================================================================Frame conversion===============================================================================================
-    // ===========================================================================================================================================================================================================
-    // --------------------------------------------------------------------------------Helper function to conver the Image Frame to Bitmap Frame that is done above----------------------------------------------------------------------------------------
+    // ==========================Frame conversion===============================================================================================
+    // ============================================================================================================================================
+    // Helper function to conver the Image Frame to Bitmap Frame that is done above----------------------------------------------------------------------------------------
     private Bitmap imgToBM(Image image) {        // convert from Image to Bitmap format for neural network processing.
         Image.Plane[] p = image.getPlanes();
         ByteBuffer y = p[0].getBuffer();
@@ -575,9 +535,9 @@ public class ManualControl extends AppCompatActivity {
         return BitmapFactory.decodeByteArray(imgBytes, 0, imgBytes.length);
     }
 
-    // ===================================================================================================Feeding Handler===============================================================================================
-    // ===========================================================================================================================================================================================================
-    // ----------------------------------------------------------------------By popping the stored Bipmap Frame queue, display it on the screen----------------------------------------------------------------------------------------------------
+    // =====================================Feeding Handler===============================================================================================
+    // ====================================================================================================================================================
+    // By popping the stored Bipmap Frame queue, display it on the screen----------------------------------------------------------------------------------------------------
     public class displayBitmap implements Runnable {
 
         protected BlockingQueue displayQueue;       // create a blocking queue to get the data from queue
@@ -593,6 +553,7 @@ public class ManualControl extends AppCompatActivity {
             while (true) {
                 try {
                     displayBitmap_ = (Bitmap) displayQueue.take();           // take data (video frame) from blocking queue
+
                     displayQueue.clear();                                   // clear the queue after taking
                     if (displayQueue != null) {
                         runOnUiThread(() -> {                               // needs to be on UI thread
@@ -607,8 +568,8 @@ public class ManualControl extends AppCompatActivity {
         }
     }
 
-    // ===================================================================================================Detection Handler===============================================================================================
-    // ===========================================================================================================================================================================================================
+    // =========================================Detection Handler===============================================================================================
+    // =====================================================================================================================================
     public class objectDetectionThread implements Runnable {
 
         private Bitmap threadBM;                            // create a bitmap variable
@@ -647,8 +608,8 @@ public class ManualControl extends AppCompatActivity {
         }
     }
 
-    // ===================================================================================================Detection Analyze===============================================================================================
-    // ===========================================================================================================================================================================================================
+    // ===========================================Detection Analyze===============================================================================================
+    // ======================================================================================================================================
     @WorkerThread
     @Nullable
     protected ManualControl.ResA analyseImage(Bitmap BMtest) {
@@ -696,131 +657,6 @@ public class ManualControl extends AppCompatActivity {
         return new ManualControl.ResA(results);
 
     }
-//}
-
-//====================================================================Recording Handler==========================================================================
-//========================================================Needs to be debugged - Not saving the data==========================================================================
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != REQUEST_CODE) {
-            Log.e(TAG, "Unknown request code: " + requestCode);
-            return;
-        }
-        if (resultCode != RESULT_OK) {
-            Toast.makeText(this, "Screen Cast Permission Denied", Toast.LENGTH_SHORT).show();
-            videocam.setChecked(false);
-            return;
-        }
-        mMediaProjectionCallback = new MediaProjectionCallback();
-        mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
-        mMediaProjection.registerCallback(mMediaProjectionCallback, null);
-        mVirtualDisplay = createVirtualDisplay();
-        mMediaRecorder.start();
-    }
-
-    public void onToggleScreenShare(View view) {
-        if (((ToggleButton) view).isChecked()) {
-            initRecorder();
-            shareScreen();
-        } else {
-            mMediaRecorder.stop();
-            mMediaRecorder.reset();
-            Log.v(TAG, "Stop Recording");
-            stopScreenSharing();
-        }
-    }
-
-    private void shareScreen() {
-        if (mMediaProjection == null) {
-            startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
-            return;
-        }
-        mVirtualDisplay = createVirtualDisplay();
-        mMediaRecorder.start();
-    }
-
-    private VirtualDisplay createVirtualDisplay() {
-        return mMediaProjection.createVirtualDisplay("ManualControl",
-                DISPLAY_WIDTH, DISPLAY_HEIGHT, mScreenDensity,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                mMediaRecorder.getSurface(), null, null);
-    }
-
-    private void initRecorder() {
-        try {
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            mMediaRecorder.setOutputFile(Environment
-                    .getExternalStoragePublicDirectory(Environment
-                            .DIRECTORY_DOWNLOADS) + "/recorded_video.mp4");
-            mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
-            mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mMediaRecorder.setVideoEncodingBitRate(512 * 1000);
-            mMediaRecorder.setVideoFrameRate(30);
-            mMediaRecorder.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private class MediaProjectionCallback extends MediaProjection.Callback {
-        @Override
-        public void onStop() {
-            if (videocam.isChecked()) {
-                videocam.setChecked(false);
-                mMediaRecorder.stop();
-                mMediaRecorder.reset();
-                Log.v(TAG, "Recording Stopped");
-            }
-            mMediaProjection = null;
-            stopScreenSharing();
-        }
-    }
-
-    private void stopScreenSharing() {
-        if (mVirtualDisplay == null) {
-            return;
-        }
-        mVirtualDisplay.release();
-        //mMediaRecorder.release(); //If used: mMediaRecorder object cannot
-        // be reused again
-        destroyMediaProjection();
-    }
-
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        destroyMediaProjection();
-//    }
-
-    private void destroyMediaProjection() {
-        if (mMediaProjection != null) {
-            mMediaProjection.unregisterCallback(mMediaProjectionCallback);
-            mMediaProjection.stop();
-            mMediaProjection = null;
-        }
-        Log.i(TAG, "MediaProjection Stopped");
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[],
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case REQUEST_PERMISSIONS: {
-                if ((grantResults.length > 0) && (grantResults[0] +
-                        grantResults[1]) == PackageManager.PERMISSION_GRANTED) {
-                    onToggleScreenShare(videocam);
-                }
-                break;
-            }
-        }
-    }
-
 }
 
 
