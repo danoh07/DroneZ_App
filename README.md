@@ -110,4 +110,6 @@ pip install djitellopy
 - Navigate to the object_tracking/tello folder and ensure all the files are properly installed
 - Make sure to turn on the drone and connect computer to drone wifi
 - Run "face_tracking.py"
-- On python terminal, type "command" and return to connect computer with drone
+
+## Notice
+Before running "face_tracking.py", please place the drone away from obstacles and people. The drone will take off automatically and start detecting and tracking the closest face it detects as soon as the python file starts running.
