@@ -46,6 +46,20 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - video stream feature don't work on emulator devices because of connection issues between the device and the drone. If you want full functionalities please test on actual andriod devices
 - For Android app, since the size of the app is big due to the object detection algorithm, it will not be able to build and install on the online emulator. Thus, actual physical phone is needed to run Android app
 
+### Facial Detection and Tracking 
+
+#### Installing Packages 
+On terminal, make sure you have the OpenCV and DJI Tello packages installed. 
+```
+pip install djitellopy
+```
+Then navigate to the object_tracking/tello folder and ensure all the files are properly installed
+
+#### Connecting to drone and Running Algorithm
+- Connect to the drone by clicking "wifi-figure" button
+- When the battery and connection status are in green, the drone is connected
+- Then navigate to the face_tracking.py and run the file using any suitable IDE (i.e. VS Code)
+
 ## How to use Android App
 ### Default page
 <img src="https://user-images.githubusercontent.com/51523562/236315300-f4d8aee0-19da-409d-8003-8503412abecb.jpg" width="300" height="600">
