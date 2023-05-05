@@ -71,7 +71,7 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - Land the drone by clicking landing button under the take off button
 - When battery is lower than 15%, the battery status will turn in red
 
-<video src="https://user-images.githubusercontent.com/51523562/236355706-9bc2f0fd-ce3b-49a4-a587-d9e318d984f8.mp4">
+<video src="https://user-images.githubusercontent.com/51523562/236355706-9bc2f0fd-ce3b-49a4-a587-d9e318d984f8.mp4"></video>
 
 ### Automatic Control
 #### Default Automatic Control Page
@@ -92,4 +92,4 @@ Open android studio > navigate to cloned directory and open app_AS_only > Build 
 - "GO" buttons are enabled when either both direction and distance value or rotation and angle value are chosen; indicated with white background when enabled, otherwise in gray
 - To make the drone to fly itself with pre-programmed path, click "AUTO" button
 
-<video src="https://user-images.githubusercontent.com/51523562/236355816-ccee27ff-dd8d-4061-a47c-e6f72a69f81f.mp4">
+<video src="https://user-images.githubusercontent.com/51523562/236355816-ccee27ff-dd8d-4061-a47c-e6f72a69f81f.mp4"></video>
