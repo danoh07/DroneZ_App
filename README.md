@@ -4,6 +4,7 @@
 - #### Flutter application
 - #### Andriod Stuido application 
 - #### Facial detection and tracking
+- #### Position estimation and localization
 
 In the future we plan to implement more features from the Andriod Stuido applaction to the Flutter application for cross platform support. 
 
@@ -113,3 +114,6 @@ pip install djitellopy
 
 ## Notice
 Before running "face_tracking.py", please place the drone away from obstacles and people. The drone will take off automatically and start detecting and tracking the closest face it detects as soon as the python file starts running.
+
+## Position estimation and localization
+- Readme file is available in the position_estimation_and_localization directory
